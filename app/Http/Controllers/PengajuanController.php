@@ -119,4 +119,16 @@ class PengajuanController extends Controller
         
         return redirect()->route('pengajuan.index')->with('success', 'Pengajuan berhasil dihapus.');
     }
+    // app/Http/Controllers/PengajuanController.php
+
+public function show(Pengajuan $pengajuan)
+{
+    // Keamanan: User hanya boleh lihat miliknya, admin boleh lihat semua
+    if (auth()->user()->role != 'admin' && $pengajuan->user_id != auth()->id()) {
+        abort(403, 'AKSI TIDAK DIIZINKAN.');
+    }
+
+    // Kirim data pengajuan ke view
+    return view('pengajuan.show', compact('pengajuan'));
+}
 }

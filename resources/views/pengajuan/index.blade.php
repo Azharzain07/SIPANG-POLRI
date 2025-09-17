@@ -34,6 +34,8 @@
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $pengajuan->judul }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $pengajuan->user->nama_polsek }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $pengajuan->category->nama_kategori ?? '-' }}</td>
+                                    
+                                    <!-- KOLOM STATUS (YANG BENAR) -->
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                             @if($pengajuan->status == 'pending') bg-yellow-100 text-yellow-800 @endif
@@ -43,16 +45,17 @@
                                             {{ ucfirst($pengajuan->status) }}
                                         </span>
                                     </td>
+
+                                    <!-- KOLOM AKSI (YANG BENAR) -->
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <a href="{{ route('pengajuan.show', $pengajuan->id) }}" class="text-blue-600 hover:text-blue-900">Detail</a>
                                         @if ($pengajuan->status == 'pending')
-                                            <a href="{{ route('pengajuan.edit', $pengajuan->id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                            <a href="{{ route('pengajuan.edit', $pengajuan->id) }}" class="text-indigo-600 hover:text-indigo-900 ml-4">Edit</a>
                                             <form action="{{ route('pengajuan.destroy', $pengajuan->id) }}" method="POST" class="inline-block ml-4" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengajuan ini?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
                                             </form>
-                                        @else
-                                            <span class="text-gray-500">-</span>
                                         @endif
                                     </td>
                                 </tr>
