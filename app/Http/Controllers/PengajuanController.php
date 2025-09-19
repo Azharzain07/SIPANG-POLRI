@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\Pengajuan;
+use App\Models\Program;
+use App\Models\Sumberdana;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class PengajuanController extends Controller
@@ -21,13 +22,18 @@ class PengajuanController extends Controller
     /**
      * Menampilkan form untuk membuat pengajuan baru.
      */
-    public function create()
+     public function create()
     {
-        // Mengambil semua data dari tabel categories (yang sekarang berisi "Bagian")
-        $bagianList = Category::orderBy('nama_kategori', 'asc')->get();
-        
-        return view('pengajuan.create', compact('bagianList'));
+        // Ambil data untuk dropdown dari database
+        $ppkUsers = User::where('role', 'ppk')->get();
+        $npwpUsers = User::where('role', 'npwp')->get();
+        $sumberDanas = SumberDana::all();
+        $programs = Program::all();
+
+        // Kirim semua data ke view
+        return view('pengajuan.create', compact('ppkUsers', 'npwpUsers', 'sumberDanas', 'programs'));
     }
+
 
     /**
      * Menyimpan pengajuan baru ke database.

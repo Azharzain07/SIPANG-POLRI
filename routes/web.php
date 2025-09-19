@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\Admin\PengajuanDashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Admin\ProgramController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'is.admin'])->group(function () {
     Route::post('/admin/pengajuan/{pengajuan}/reject', [PengajuanDashboardController::class, 'reject'])->name('admin.pengajuan.reject');
     
     Route::get('/admin/pengajuan/export-pdf', [PengajuanDashboardController::class, 'exportPDF'])->name('admin.pengajuan.exportPDF');
+    Route::resource('/admin/programs', ProgramController::class);
     
     // PASTIKAN RUTE INI ADA DAN TIDAK DI DALAM KOMENTAR
     Route::get('/admin/pengajuan/export-excel', [PengajuanDashboardController::class, 'exportExcel'])->name('admin.pengajuan.exportExcel');
