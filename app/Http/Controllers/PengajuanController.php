@@ -6,12 +6,31 @@ use App\Models\Program;
 use App\Models\Sumberdana;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Activity;
+use App\Models\Kro;
+use App\Models\Account; 
+use App\Models\Coa;
 
 class PengajuanController extends Controller
 {
     /**
      * Menampilkan daftar riwayat pengajuan milik user yang sedang login.
      */
+
+    public function getActivities($programId)
+    {
+        $activities = Activity::where('program_id', $programId)->get();
+        return response()->json($activities);
+    }
+
+
+     public function getKros($activityId)
+    {
+        $kros = Kro::where('activity_id', $activityId)->get();
+        return response()->json($kros);
+    }
+
+
     public function index()
     {
         $pengajuans = Pengajuan::with(['user', 'category'])->where('user_id', auth()->id())->latest()->get();
@@ -137,4 +156,19 @@ public function show(Pengajuan $pengajuan)
     // Kirim data pengajuan ke view
     return view('pengajuan.show', compact('pengajuan'));
 }
+
+
+// METHOD BARU UNTUK MENGAMBIL AKUN BELANJA
+    public function getAccounts()
+    {
+        $accounts = Account::orderBy('nama_akun_belanja', 'asc')->get();
+        return response()->json($accounts);
+    }
+
+    // METHOD BARU UNTUK MENGAMBIL COA
+    public function getCoas($accountId)
+    {
+        $coas = Coa::where('account_id', $accountId)->get();
+        return response()->json($coas);
+    }
 }

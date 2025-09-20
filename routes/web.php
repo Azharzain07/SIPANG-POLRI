@@ -33,6 +33,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('pengajuan', PengajuanController::class);
     
     Route::get('/get-bagian/{polsekId}', [PengajuanController::class, 'getBagian'])->name('getBagian');
+     // RUTE BARU UNTUK DROPDOWN DINAMIS
+    Route::get('/get-activities/{programId}', [PengajuanController::class, 'getActivities'])->name('getActivities');
+    Route::get('/get-kros/{activityId}', [PengajuanController::class, 'getKros'])->name('getKros');
+
+    
+     Route::get('/get-accounts', [PengajuanController::class, 'getAccounts'])->name('getAccounts');
+    Route::get('/get-coas/{accountId}', [PengajuanController::class, 'getCoas'])->name('getCoas');
+
 });
 
 // Grup Rute Khusus Admin

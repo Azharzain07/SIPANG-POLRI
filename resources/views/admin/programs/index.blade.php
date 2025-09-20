@@ -10,29 +10,37 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <div class="flex justify-end mb-4">
-                        <a href="{{ route('programs.create') }}" class="px-4 py-2 bg-gray-800 text-white rounded-md">+ Tambah Program</a>
+                        <a href="{{ route('programs.create') }}" class="px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
+                            + Tambah Program Baru
+                        </a>
                     </div>
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead>
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left">Nama Program</th>
-                                <th class="px-6 py-3 text-left">Aksi</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Program</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @foreach ($programs as $program)
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse ($programs as $program)
                             <tr>
-                                <td class="px-6 py-4">{{ $program->nama_program }}</td>
-                                <td class="px-6 py-4">
-                                    <a href="{{ route('programs.edit', $program->id) }}" class="text-indigo-600">Edit</a>
-                                    <form action="{{ route('programs.destroy', $program->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin hapus?');">
+                                <td class="px-6 py-4 whitespace-nowrap">{{ $program->nama_program }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ route('programs.edit', $program) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                    <form action="{{ route('programs.destroy', $program) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ini?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-red-600 ml-4">Hapus</button>
+                                        <button type="submit" class="text-red-600 hover:text-red-900 ml-4">Hapus</button>
                                     </form>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="2" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">
+                                    Belum ada data program.
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
