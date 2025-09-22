@@ -13,6 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
 ->withMiddleware(function (Middleware $middleware) {
     $middleware->alias([
         'is.admin' => \App\Http\Middleware\IsAdmin::class,
+        'is.npwp' => \App\Http\Middleware\IsNpwp::class,
+        'is.ppk' => \App\Http\Middleware\IsPpk::class, // <-- Tambahkan ini
     ]);
 })
     ->withExceptions(function (Exceptions $exceptions): void {

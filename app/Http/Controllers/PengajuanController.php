@@ -10,6 +10,8 @@ use App\Models\Activity;
 use App\Models\Kro;
 use App\Models\Account; 
 use App\Models\Coa;
+use App\Models\Pengajuan;
+use App\Models\PengajuanDetail;
 
 class PengajuanController extends Controller
 {
@@ -33,9 +35,14 @@ class PengajuanController extends Controller
 
     public function index()
     {
-        $pengajuans = Pengajuan::with(['user', 'category'])->where('user_id', auth()->id())->latest()->get();
-        $sisaBudget = auth()->user()->budget_tahunan;
-        return view('pengajuan.index', compact('pengajuans', 'sisaBudget'));
+        // Ambil semua pengajuan milik user yang login
+        // 'with' digunakan untuk mengambil data relasi agar lebih efisien (Eager Loading)
+        $pengajuans = Pengajuan::with(['details'])
+            ->where('user_id', auth()->id())
+            ->latest() // Urutkan dari yang paling baru
+            ->get();
+
+        return view('pengajuan.index', compact('pengajuans'));
     }
 
     /**
@@ -57,30 +64,42 @@ class PengajuanController extends Controller
     /**
      * Menyimpan pengajuan baru ke database.
      */
-    public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'tanggal_pengajuan' => 'required|date|after_or_equal:today',
-            'judul' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
-            'jumlah_dana' => 'required|numeric|min:1',
-            'deskripsi' => 'required|string',
-            'lampiran' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+  // app/Http/Controllers/PengajuanController.php
+
+public function store(Request $request)
+{
+    // 1. Validasi SEMUA input yang dibutuhkan oleh database
+    $validatedData = $request->validate([
+        'tanggal_pengajuan' => 'required|date|after_or_equal:today',
+        'ppk_user_id' => 'required|exists:users,id',
+        'npwp_user_id' => 'required|exists:users,id',
+        'sumber_dana_id' => 'required|exists:sumber_danas,id',
+        'uraian' => 'required|string', // <-- Pastikan ini ada
+        'program_id' => 'required|exists:programs,id',
+        'activity_id' => 'required|exists:activities,id',
+        'kro_id' => 'required|exists:kros,id',
+        'details' => 'required|array',
+        'details.*.coa_id' => 'required|exists:coas,id',
+        'details.*.jumlah_diajukan' => 'required|numeric|min:1',
+    ]);
+    
+    // 2. Tambahkan data user yang login ke data utama
+    $validatedData['user_id'] = auth()->id();
+
+    // 3. Simpan data ke tabel induk (pengajuans)
+    $pengajuan = Pengajuan::create($validatedData);
+
+    // 4. Looping dan simpan data ke tabel anak (pengajuan_details)
+    foreach ($request->details as $detail) {
+        PengajuanDetail::create([
+            'pengajuan_id' => $pengajuan->id,
+            'coa_id' => $detail['coa_id'],
+            'jumlah_diajukan' => $detail['jumlah_diajukan'],
         ]);
-
-        if ($request->hasFile('lampiran')) {
-            $path = $request->file('lampiran')->store('lampiran-pengajuan', 'public');
-            $validatedData['lampiran'] = $path;
-        }
-
-        $validatedData['user_id'] = auth()->id();
-        $validatedData['status'] = 'pending';
-
-        Pengajuan::create($validatedData);
-
-        return redirect()->route('pengajuan.index')->with('success', 'Pengajuan berhasil dikirim.');
     }
 
+    return redirect()->route('pengajuan.index')->with('success', 'Pengajuan berhasil dikirim dan sedang ditinjau.');
+}
     /**
      * Menampilkan form untuk mengedit pengajuan.
      */
@@ -148,12 +167,18 @@ class PengajuanController extends Controller
 
 public function show(Pengajuan $pengajuan)
 {
-    // Keamanan: User hanya boleh lihat miliknya, admin boleh lihat semua
-    if (auth()->user()->role != 'admin' && $pengajuan->user_id != auth()->id()) {
-        abort(403, 'AKSI TIDAK DIIZINKAN.');
+    // Keamanan: Pastikan user hanya bisa melihat pengajuannya sendiri,
+    // sementara admin (NPWP & PPK) bisa melihat semua.
+    $user = auth()->user();
+    if ($user->role == 'polsek' || $user->role == 'bagian') {
+        if ($pengajuan->user_id != $user->id) {
+            abort(403);
+        }
     }
 
-    // Kirim data pengajuan ke view
+    // Load semua relasi yang dibutuhkan agar efisien
+    $pengajuan->load(['user', 'program', 'activity', 'kro', 'sumberDana', 'details.coa.account']);
+    
     return view('pengajuan.show', compact('pengajuan'));
 }
 

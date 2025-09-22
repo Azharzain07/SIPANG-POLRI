@@ -13,9 +13,6 @@
                         @csrf
                         <div class="space-y-6">
                             
-                            <!-- ============================================= -->
-                            <!--      BAGIAN 1: INFORMASI DASAR              -->
-                            <!-- ============================================= -->
                             <fieldset id="informasi-dasar" class="border p-4 rounded-md">
                                 <legend class="text-lg font-medium px-2">Informasi Dasar</legend>
                                 <div class="space-y-4 pt-4">
@@ -51,9 +48,6 @@
                                 </div>
                             </fieldset>
 
-                            <!-- ============================================= -->
-                            <!--      BAGIAN 2: DETAIL KEGIATAN              -->
-                            <!-- ============================================= -->
                             <fieldset id="detail-kegiatan" class="border p-4 rounded-md" style="display: none;">
                                 <legend class="text-lg font-medium px-2">Detail Kegiatan</legend>
                                 <div class="space-y-4 pt-4">
@@ -83,12 +77,9 @@
                                 </div>
                             </fieldset>
                             
-                            <!-- ============================================= -->
-                            <!--      BAGIAN 3: RINCIAN ANGGARAN             -->
-                            <!-- ============================================= -->
                             <fieldset id="rincian-anggaran" class="border p-4 rounded-md mt-6" style="display: none;">
                                 <legend class="text-lg font-medium px-2">Rincian Anggaran</legend>
-                                <div class="space-y-4 pt-4" x-data="{ openModal: false }">
+                                <div class="space-y-4 pt-4" x-data="{ openModal: false, closeModal() { this.openModal = false; } }">
                                     <div class="overflow-x-auto">
                                         <table class="min-w-full divide-y divide-gray-200">
                                             <thead class="bg-gray-50">
@@ -102,11 +93,10 @@
                                             <tbody id="rincian-body"></tbody>
                                         </table>
                                     </div>
-                                    <button @click="openModal = true" type="button" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md">
+                                    <button @click="openModal = true" type="button" id="tombol-akun-belanja" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md">
                                         + Tambah Akun Belanja
                                     </button>
-                                    <!-- POPUP MODAL -->
-                                    <div x-show="openModal" @keydown.escape.window="openModal = false" class="fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full z-50 flex items-center justify-center" x-cloak>
+                                    <div x-show="openModal" @keydown.escape.window="closeModal()" class="fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full z-50 flex items-center justify-center" x-cloak>
                                         <div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
                                             <div class="mt-3">
                                                 <h3 class="text-lg font-medium text-gray-900">Pilih Akun Belanja dan COA</h3>
@@ -129,8 +119,8 @@
                                                     </div>
                                                 </div>
                                                 <div class="items-center px-4 py-3 mt-4 text-right">
-                                                    <button @click="openModal = false" type="button" class="px-4 py-2 bg-gray-200 rounded-md mr-2">Batal</button>
-                                                    <button id="tambah-rincian-btn" type="button" class="px-4 py-2 bg-green-600 text-white rounded-md" disabled>Tambah ke Rincian</button>
+                                                    <button @click="closeModal()" type="button" class="px-4 py-2 bg-gray-200 rounded-md mr-2">Batal</button>
+                                                    <button id="tambah-rincian-btn" type="button" @click="closeModal()" class="px-4 py-2 bg-green-600 text-white rounded-md" disabled>Tambah ke Rincian</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -138,7 +128,6 @@
                                 </div>
                             </fieldset>
 
-                             <!-- Tombol Submit Utama -->
                              <div class="flex justify-end pt-4">
                                 <button type="submit" id="submit-button" class="px-6 py-2 bg-gray-800 text-white rounded-md disabled:opacity-50" disabled>
                                     Kirim Pengajuan
@@ -167,6 +156,7 @@
                 kro: document.getElementById('kro'),
                 lokasi: document.getElementById('lokasi'),
                 rincianAnggaran: document.getElementById('rincian-anggaran'),
+                tombolAkunBelanja: document.getElementById('tombol-akun-belanja'),
                 submitButton: document.getElementById('submit-button')
             };
 
@@ -182,10 +172,10 @@
                 rincianBody: document.getElementById('rincian-body'),
             };
             
-            let coaDataStore = []; // Untuk menyimpan data COA sementara
+            let coaDataStore = [];
 
             // --- Fungsi Helper ---
-            function populateDropdown(selectElement, data, defaultOption, valueKey = 'id', textKey = 'name') {
+            function populateDropdown(selectElement, data, defaultOption, valueKey, textKey) {
                 selectElement.innerHTML = `<option value="">-- ${defaultOption} --</option>`;
                 data.forEach(item => {
                     const option = document.createElement('option');
@@ -206,6 +196,7 @@
             elements.sumberDana.addEventListener('change', () => elements.uraian.disabled = !elements.sumberDana.value);
             elements.uraian.addEventListener('input', () => {
                 elements.detailKegiatan.style.display = elements.uraian.value.trim() !== '' ? 'block' : 'none';
+                elements.program.disabled = elements.uraian.value.trim() === '';
             });
 
             // --- Logika Dropdown Dinamis ---
@@ -255,10 +246,8 @@
                 elements.rincianAnggaran.style.display = this.value ? 'block' : 'none';
             });
             
-            // --- Logika Popup (Misi Hari ke-9) ---
-            const tombolAkunBelanja = document.getElementById('tombol-akun-belanja');
-
-            tombolAkunBelanja.addEventListener('click', function() {
+            // --- Logika Popup ---
+            elements.tombolAkunBelanja.addEventListener('click', function() {
                 fetch('/get-accounts')
                     .then(response => response.json())
                     .then(data => {
@@ -318,7 +307,39 @@
                     popupElements.tambahBtn.disabled = false;
                 }
             });
+
+            popupElements.tambahBtn.addEventListener('click', function() {
+                const coaId = popupElements.coa.value;
+                const coaText = popupElements.coa.options[popupElements.coa.selectedIndex].text;
+                const akunText = popupElements.akun.options[popupElements.akun.selectedIndex].text;
+                const jumlah = parseFloat(popupElements.jumlah.value);
+                
+                if (!coaId || !jumlah) { return; }
+
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td class="px-4 py-2 border-b">${akunText}</td>
+                    <td class="px-4 py-2 border-b">${coaText}</td>
+                    <td class="px-4 py-2 text-right border-b">${formatRupiah(jumlah)}</td>
+                    <td class="px-4 py-2 text-center border-b">
+                        <button type="button" class="text-red-500 hover:text-red-700 remove-item-btn">Hapus</button>
+                    </td>
+                    <input type="hidden" name="details[${coaId}][coa_id]" value="${coaId}">
+                    <input type="hidden" name="details[${coaId}][jumlah_diajukan]" value="${jumlah}">
+                `;
+                popupElements.rincianBody.appendChild(newRow);
+                elements.submitButton.disabled = false;
+                // Reset popup
+            });
+            
+            popupElements.rincianBody.addEventListener('click', function(event) {
+                if (event.target.classList.contains('remove-item-btn')) {
+                    event.target.closest('tr').remove();
+                    if (popupElements.rincianBody.children.length === 0) {
+                        elements.submitButton.disabled = true;
+                    }
+                }
+            });
         });
     </script>
 </x-app-layout>
-

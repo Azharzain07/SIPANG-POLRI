@@ -12,13 +12,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
 {
     $this->call([
+        UserSeeder::class,
         SumberDanaSeeder::class,
         ProgramSeeder::class,
-        ActivitySeeder::class, // <-- Pastikan ini ada
-        KroSeeder::class,      // <-- Pastikan ini ada
-        AccountSeeder::class,
-        UserSeeder::class,
-        // CoaSeeder bisa ditambahkan di sini
+        ActivitySeeder::class,
+        KroSeeder::class,
+        AccountSeeder::class, 
+        // CoaSeeder::class,    // <-- HAPUS ATAU BERI KOMENTAR BARIS INI
     ]);
     }
 }

@@ -1,18 +1,28 @@
 <?php
 
-namespace Database\Seeders;
+namespace App\Models;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use App\Models\Account;
 use App\Models\Coa;
 
-class CoaSeeder extends Seeder
+class Coa extends Model // <-- PASTIKAN NAMA CLASS INI BENAR
 {
+    use HasFactory;
+
+    protected $fillable = [
+        'account_id',
+        'nama_coa',
+        'pagu',
+        'sisa_pagu',
+    ];
+
     /**
-     * Run the database seeds.
+     * Get the account that owns the COA.
      */
-    public function run(): void
+    public function account()
     {
-        //
+        return $this->belongsTo(Account::class);
     }
 }

@@ -16,28 +16,36 @@ class Pengajuan extends Model
      */
     protected $fillable = [
         'user_id',
-        'category_id', // Ini sekarang untuk "Bagian"
         'tanggal_pengajuan',
-        'judul',
-        'deskripsi',
-        'jumlah_dana',
-        'status',
-        'lampiran',
+        'status_npwp',
+        'npwp_user_id',
+        'npwp_processed_at',
+        'status_ppk',
+        'ppk_user_id',
+        'ppk_processed_at',
+        'uraian',
+        'kppn',
+        'sumber_dana_id',
+        'program_id',
+        'activity_id',
+        'kro_id',
     ];
 
-    /**
-     * Get the user that owns the pengajuan.
-     */
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    // Definisikan relasi-relasi ke tabel lain
+    public function user() { return $this->belongsTo(User::class); }
+    public function program() { return $this->belongsTo(Program::class); }
+    public function activity() { return $this->belongsTo(Activity::class); }
+    public function kro() { return $this->belongsTo(Kro::class); }
+    public function sumberDana() { return $this->belongsTo(SumberDana::class); }
+    public function details() { return $this->hasMany(PengajuanDetail::class); }
 
     /**
      * Get the category (Bagian) for the pengajuan.
+     * INI ADALAH METHOD YANG HILANG & KITA TAMBAHKAN KEMBALI
      */
     public function category()
     {
+        // Pengajuan ini terhubung ke satu Category (Bagian) melalui kolom 'category_id'
         return $this->belongsTo(Category::class, 'category_id');
     }
 }

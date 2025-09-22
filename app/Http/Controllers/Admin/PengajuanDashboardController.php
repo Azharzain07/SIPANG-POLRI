@@ -14,25 +14,30 @@ class PengajuanDashboardController extends Controller
     /**
      * Menampilkan halaman review untuk Admin, lengkap dengan ringkasan data.
      */
-    public function index(Request $request) // Tambahkan Request $request
+    public function index(Request $request)
 {
-    // Mulai query, jangan langsung get()
-    $query = Pengajuan::with(['user', 'category']);
+    // Logika query untuk tabel utama (ini bisa disesuaikan nanti)
+    $query = Pengajuan::with(['user', 'program', 'activity', 'kro']);
 
-    // Logika Pencarian
     $query->when($request->search, function ($q, $search) {
-        // Jika ada input 'search', tambahkan kondisi where
-        return $q->where('judul', 'like', "%{$search}%");
+        return $q->where('uraian', 'like', "%{$search}%");
     });
 
-    // Eksekusi query setelah semua kondisi ditambahkan
     $pengajuans = $query->latest()->get();
 
-    // --- Data untuk Ringkasan ---
-    // (Logika ini tetap sama)
-    $pendingCount = Pengajuan::where('status', 'pending')->count();
-    $totalDanaDiterima = Pengajuan::where('status', 'diterima')->sum('jumlah_dana');
-    $totalDanaDiajukan = Pengajuan::sum('jumlah_dana');
+    // --- UBAH LOGIKA PERHITUNGAN DI SINI ---
+    // Hitung pending berdasarkan status NPWP karena itu tahap pertama
+    $pendingCount = Pengajuan::where('status_npwp', 'pending')->count();
+    
+    // Untuk dana diterima, kita asumsikan status final PPK adalah 'diterima'
+    $pengajuansDiterima = Pengajuan::where('status_ppk', 'diterima')->get();
+    
+    $totalDanaDiterima = 0;
+    foreach ($pengajuansDiterima as $pengajuan) {
+        $totalDanaDiterima += $pengajuan->details()->sum('jumlah_diajukan');
+    }
+
+    $totalDanaDiajukan =\App\Models\PengajuanDetail::sum('jumlah_diajukan');
 
     return view('admin.pengajuan.index', compact(
         'pengajuans',
@@ -40,13 +45,6 @@ class PengajuanDashboardController extends Controller
         'totalDanaDiterima',
         'totalDanaDiajukan'
     ));
-        // Kirim semua data (untuk tabel dan ringkasan) ke view
-        return view('admin.pengajuan.index', compact(
-            'pengajuans',
-            'pendingCount',
-            'totalDanaDiterima',
-            'totalDanaDiajukan'
-        ));
     }
 
     /**

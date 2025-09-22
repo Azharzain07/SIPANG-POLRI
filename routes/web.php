@@ -8,6 +8,9 @@ use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\Admin\PengajuanDashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\ProgramController;
+use App\Http\Controllers\Npwp\DashboardController;
+use App\Http\Controllers\Ppk\DashboardController as PpkDashboardController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -58,5 +61,20 @@ Route::middleware(['auth', 'is.admin'])->group(function () {
     Route::get('/admin/pengajuan/export-excel', [PengajuanDashboardController::class, 'exportExcel'])->name('admin.pengajuan.exportExcel');
 });
 
+//Rute untuk Admin NPWP
+Route::middleware(['auth', 'is.npwp'])->prefix('npwp')->name('npwp.')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/pengajuan/{pengajuan}/approve', [DashboardController::class, 'approve'])->name('pengajuan.approve');
+    Route::post('/pengajuan/{pengajuan}/reject', [DashboardController::class, 'reject'])->name('pengajuan.reject');
+    // Nanti kita akan tambahkan rute untuk approve & reject di sini
+});
+
+//Rute untuk admin PPK
+Route::middleware(['auth', 'is.ppk'])->prefix('ppk')->name('ppk.')->group(function () {
+    Route::get('/dashboard', [PpkDashboardController::class, 'index'])->name('dashboard');
+    // TAMBAHKAN DUA RUTE INI
+    Route::post('/pengajuan/{pengajuan}/approve', [PpkDashboardController::class, 'approve'])->name('pengajuan.approve');
+    Route::post('/pengajuan/{pengajuan}/reject', [PpkDashboardController::class, 'reject'])->name('pengajuan.reject');
+});
 require __DIR__.'/auth.php';
 
