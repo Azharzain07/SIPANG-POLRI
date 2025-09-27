@@ -74,47 +74,71 @@
                 <div class="space-y-8">
 
                      <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="p-6 text-gray-900">
-                            <h4 class="font-semibold text-gray-600">Total Dana Diajukan</h4>
-                            <p class="text-3xl font-bold text-indigo-600 mt-2">Rp {{ number_format($pengajuan->details->sum('jumlah_diajukan'), 0, ',', '.') }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg">
-                        <div class="p-6 text-gray-900">
-                            <h4 class="font-semibold text-gray-600 mb-3">Rincian Belanja</h4>
-                            <ul class="space-y-2 text-sm">
-                                @foreach($pengajuan->details as $detail)
-                                <li class="flex justify-between items-center">
-                                    <span>{{ $detail->coa->nama_coa }}</span>
-                                    <span class="font-semibold">Rp {{ number_format($detail->jumlah_diajukan, 0, ',', '.') }}</span>
-                                </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
+                         <div class="p-6 text-gray-900">
+                             <h4 class="font-semibold text-gray-600">Total Dana Diajukan</h4>
+                             <p class="text-3xl font-bold text-indigo-600 mt-2">Rp {{ number_format($pengajuan->details->sum('jumlah_diajukan'), 0, ',', '.') }}</p>
+                         </div>
+                     </div>
+                     
+                     <div class="bg-white overflow-hidden shadow-lg sm:rounded-lg">
+                         <div class="p-6 text-gray-900">
+                             <h4 class="font-semibold text-gray-600 mb-3">Rincian Belanja</h4>
+                             <ul class="space-y-2 text-sm">
+                                 @foreach($pengajuan->details as $detail)
+                                 <li class="flex justify-between items-center">
+                                     <span>{{ $detail->coa->nama_coa }}</span>
+                                     <span class="font-semibold">Rp {{ number_format($detail->jumlah_diajukan, 0, ',', '.') }}</span>
+                                 </li>
+                                 @endforeach
+                             </ul>
+                         </div>
+                     </div>
                 </div>
             </div>
 
-            <div class="mt-8 flex justify-end items-center space-x-4">
-                <a href="{{ url()->previous() }}" class="px-6 py-2 bg-gray-200 border rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-300">
+            {{-- ========================================================== --}}
+            {{-- ========= BAGIAN YANG DIPERBARUI DIMULAI DARI SINI ========= --}}
+            {{-- ========================================================== --}}
+
+            <div class="mt-8 flex justify-end items-center space-x-3">
+                
+                {{-- Tombol Kembali (Secondary Button) --}}
+                <a href="{{ url()->previous() }}" 
+                   class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
                     Kembali
                 </a>
 
-                {{-- Tombol aksi ini hanya muncul untuk pemilik pengajuan & JIKA KEDUA STATUS MASIH PENDING --}}
-                @if(auth()->id() == $pengajuan->user_id && $pengajuan->status_npwp == 'pending' && $pengajuan->status_ppk == 'pending')
-                    <a href="#" class="px-6 py-2 bg-indigo-600 border rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500">
+                @php
+                    $userIsOwner = (auth()->id() == $pengajuan->user_id);
+                    $isPolsekOrBagian = (auth()->user()->role == 'polsek' || auth()->user()->role == 'bagian');
+                    $isPending = ($pengajuan->status_npwp == 'pending' && $pengajuan->status_ppk == 'pending');
+                @endphp
+
+                {{-- Tombol aksi ini hanya muncul untuk pemilik pengajuan dengan role Polsek/Bagian & jika statusnya pending --}}
+                @if($userIsOwner && $isPolsekOrBagian && $isPending)
+                    
+                    {{-- Tombol Edit (Primary Button - Biru) --}}
+                    <a href="{{ route('pengajuan.edit', $pengajuan) }}" 
+                       class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
                         Edit Pengajuan
                     </a>
-                    <form action="#" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengajuan ini?');">
+                    
+                    {{-- Tombol Hapus (Danger Button - Merah) --}}
+                    <form action="{{ route('pengajuan.destroy', $pengajuan) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengajuan ini?');">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="px-6 py-2 bg-red-600 border rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500">
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             Hapus
                         </button>
                     </form>
+
                 @endif
             </div>
+            
+            {{-- ========================================================== --}}
+            {{-- ========== BAGIAN YANG DIPERBARUI BERAKHIR DI SINI ========== --}}
+            {{-- ========================================================== --}}
 
         </div>
     </div>

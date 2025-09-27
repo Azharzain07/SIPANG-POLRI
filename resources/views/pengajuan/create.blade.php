@@ -9,7 +9,7 @@
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 md:p-8 text-gray-900">
-                    <form method="POST" action="{{ route('pengajuan.store') }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('pengajuan.store') }}">
                         @csrf
                         <div class="space-y-6">
                             
@@ -90,12 +90,14 @@
                                                     <th class="px-4 py-2 text-center">Aksi</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="rincian-body"></tbody>
+                                            <tbody id="rincian-body">
+                                            </tbody>
                                         </table>
                                     </div>
                                     <button @click="openModal = true" type="button" id="tombol-akun-belanja" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md">
                                         + Tambah Akun Belanja
                                     </button>
+                                    
                                     <div x-show="openModal" @keydown.escape.window="closeModal()" class="fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full z-50 flex items-center justify-center" x-cloak>
                                         <div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
                                             <div class="mt-3">
@@ -141,65 +143,89 @@
         </div>
     </div>
 
+    @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- Referensi ke semua elemen form ---
-            const elements = {
-                tanggal: document.getElementById('tanggal_pengajuan'),
-                ppk: document.getElementById('ppk'),
-                npwp: document.getElementById('npwp'),
-                sumberDana: document.getElementById('sumber_dana'),
-                uraian: document.getElementById('uraian'),
-                detailKegiatan: document.getElementById('detail-kegiatan'),
-                program: document.getElementById('program'),
-                aktivitas: document.getElementById('aktivitas'),
-                kro: document.getElementById('kro'),
-                lokasi: document.getElementById('lokasi'),
-                rincianAnggaran: document.getElementById('rincian-anggaran'),
-                tombolAkunBelanja: document.getElementById('tombol-akun-belanja'),
-                submitButton: document.getElementById('submit-button')
-            };
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Referensi ke semua elemen form ---
+        const elements = {
+            tanggal: document.getElementById('tanggal_pengajuan'),
+            ppk: document.getElementById('ppk'),
+            npwp: document.getElementById('npwp'),
+            sumberDana: document.getElementById('sumber_dana'),
+            uraian: document.getElementById('uraian'),
+            detailKegiatan: document.getElementById('detail-kegiatan'),
+            program: document.getElementById('program'),
+            aktivitas: document.getElementById('aktivitas'),
+            kro: document.getElementById('kro'),
+            lokasi: document.getElementById('lokasi'),
+            rincianAnggaran: document.getElementById('rincian-anggaran'),
+            tombolAkunBelanja: document.getElementById('tombol-akun-belanja'),
+            submitButton: document.getElementById('submit-button')
+        };
 
-            const popupElements = {
-                akun: document.getElementById('popup_akun'),
-                coa: document.getElementById('popup_coa'),
-                infoPagu: document.getElementById('info_pagu'),
-                paguValue: document.getElementById('pagu_value'),
-                sisaPaguValue: document.getElementById('sisa_pagu_value'),
-                jumlah: document.getElementById('popup_jumlah'),
-                errorPagu: document.getElementById('error_pagu'),
-                tambahBtn: document.getElementById('tambah-rincian-btn'),
-                rincianBody: document.getElementById('rincian-body'),
-            };
-            
-            let coaDataStore = [];
+        const popupElements = {
+            akun: document.getElementById('popup_akun'),
+            coa: document.getElementById('popup_coa'),
+            infoPagu: document.getElementById('info_pagu'),
+            paguValue: document.getElementById('pagu_value'),
+            sisaPaguValue: document.getElementById('sisa_pagu_value'),
+            jumlah: document.getElementById('popup_jumlah'),
+            errorPagu: document.getElementById('error_pagu'),
+            tambahBtn: document.getElementById('tambah-rincian-btn'),
+            rincianBody: document.getElementById('rincian-body'),
+        };
+        
+        let coaDataStore = [];
 
-            // --- Fungsi Helper ---
-            function populateDropdown(selectElement, data, defaultOption, valueKey, textKey) {
-                selectElement.innerHTML = `<option value="">-- ${defaultOption} --</option>`;
-                data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item[valueKey];
-                    option.textContent = item[textKey];
-                    selectElement.appendChild(option);
-                });
-            }
-            
-            function formatRupiah(angka) {
-                return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
-            }
-
-            // --- Logika Berurutan ---
-            elements.tanggal.addEventListener('change', () => elements.ppk.disabled = !elements.tanggal.value);
-            elements.ppk.addEventListener('change', () => elements.npwp.disabled = !elements.ppk.value);
-            elements.npwp.addEventListener('change', () => elements.sumberDana.disabled = !elements.npwp.value);
-            elements.sumberDana.addEventListener('change', () => elements.uraian.disabled = !elements.sumberDana.value);
-            elements.uraian.addEventListener('input', () => {
-                elements.detailKegiatan.style.display = elements.uraian.value.trim() !== '' ? 'block' : 'none';
-                elements.program.disabled = elements.uraian.value.trim() === '';
+        // --- Fungsi Helper ---
+        function populateDropdown(selectElement, data, defaultOption, valueKey, textKey) {
+            selectElement.innerHTML = `<option value="">-- ${defaultOption} --</option>`;
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[valueKey];
+                option.textContent = item[textKey];
+                if (item.lokasi) {
+                    option.dataset.lokasi = item.lokasi;
+                }
+                selectElement.appendChild(option);
             });
+        }
+        
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        }
 
-            // --- Logika Dropdown Dinamis ---
+        // --- Logika Berurutan ---
+        if (elements.tanggal) {
+            elements.tanggal.addEventListener('input', () => {
+                if (elements.ppk) elements.ppk.disabled = !elements.tanggal.value;
+            });
+        }
+        if (elements.ppk) {
+            elements.ppk.addEventListener('change', () => {
+                if (elements.npwp) elements.npwp.disabled = !elements.ppk.value;
+            });
+        }
+        if (elements.npwp) {
+            elements.npwp.addEventListener('change', () => {
+                if (elements.sumberDana) elements.sumberDana.disabled = !elements.npwp.value;
+            });
+        }
+        if (elements.sumberDana) {
+            elements.sumberDana.addEventListener('change', () => {
+                if (elements.uraian) elements.uraian.disabled = !elements.sumberDana.value;
+            });
+        }
+        if (elements.uraian) {
+            elements.uraian.addEventListener('input', () => {
+                if (elements.detailKegiatan) {
+                    elements.detailKegiatan.style.display = elements.uraian.value.trim() !== '' ? 'block' : 'none';
+                }
+            });
+        }
+
+        // --- Logika Dropdown Dinamis (Cascading) ---
+        if (elements.program) {
             elements.program.addEventListener('change', function() {
                 const programId = this.value;
                 elements.aktivitas.disabled = true;
@@ -210,17 +236,23 @@
                 elements.rincianAnggaran.style.display = 'none';
 
                 if (programId) {
-                    fetch(`/get-activities/${programId}`)
+                    fetch(`{{ url('/get-activities') }}/${programId}`)
                         .then(response => response.json())
                         .then(data => {
                             populateDropdown(elements.aktivitas, data, 'Pilih Aktivitas', 'id', 'nama_aktivitas');
                             elements.aktivitas.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching activities:', error);
+                            elements.aktivitas.innerHTML = '<option value="">Gagal memuat data</option>';
                         });
                 } else {
                     elements.aktivitas.innerHTML = '<option value="">-- Pilih Program Dulu --</option>';
                 }
             });
+        }
 
+        if (elements.aktivitas) {
             elements.aktivitas.addEventListener('change', function() {
                 const activityId = this.value;
                 elements.kro.disabled = true;
@@ -229,32 +261,48 @@
                 elements.rincianAnggaran.style.display = 'none';
 
                 if (activityId) {
-                    fetch(`/get-kros/${activityId}`)
+                    fetch(`{{ url('/get-kros') }}/${activityId}`)
                         .then(response => response.json())
                         .then(data => {
                             populateDropdown(elements.kro, data, 'Pilih KRO', 'id', 'nama_kro');
                             elements.kro.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching KROs:', error);
+                            elements.kro.innerHTML = '<option value="">Gagal memuat data</option>';
                         });
                 } else {
                     elements.kro.innerHTML = '<option value="">-- Pilih Aktivitas Dulu --</option>';
                 }
             });
-            
+        }
+        
+        if (elements.kro) {
             elements.kro.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                elements.lokasi.value = selectedOption.dataset.lokasi || '';
-                elements.rincianAnggaran.style.display = this.value ? 'block' : 'none';
+                if (this.value) {
+                    const selectedOption = this.options[this.selectedIndex];
+                    elements.lokasi.value = selectedOption.dataset.lokasi || 'Lokasi tidak tersedia';
+                    elements.rincianAnggaran.style.display = 'block';
+                } else {
+                    elements.lokasi.value = '';
+                    elements.rincianAnggaran.style.display = 'none';
+                }
             });
-            
-            // --- Logika Popup ---
+        }
+
+        // --- Logika Popup & Rincian ---
+        if (elements.tombolAkunBelanja) {
             elements.tombolAkunBelanja.addEventListener('click', function() {
-                fetch('/get-accounts')
+                fetch('{{ route("getAccounts") }}')
                     .then(response => response.json())
                     .then(data => {
                         populateDropdown(popupElements.akun, data, 'Pilih Akun Belanja', 'id', 'nama_akun_belanja');
-                    });
+                    })
+                    .catch(error => console.error('Gagal mengambil data Akun Belanja:', error));
             });
+        }
 
+        if (popupElements.akun) {
             popupElements.akun.addEventListener('change', function() {
                 const accountId = this.value;
                 popupElements.coa.disabled = true;
@@ -265,7 +313,7 @@
                 popupElements.tambahBtn.disabled = true;
 
                 if (accountId) {
-                    fetch(`/get-coas/${accountId}`)
+                    fetch(`{{ url('/get-coas') }}/${accountId}`)
                         .then(response => response.json())
                         .then(data => {
                             coaDataStore = data;
@@ -276,14 +324,15 @@
                     popupElements.coa.innerHTML = '<option value="">-- Pilih Akun Belanja Dulu --</option>';
                 }
             });
+        }
 
+        if (popupElements.coa) {
             popupElements.coa.addEventListener('change', function() {
                 const coaId = this.value;
                 popupElements.infoPagu.style.display = 'none';
                 popupElements.jumlah.disabled = true;
                 popupElements.jumlah.value = '';
                 popupElements.tambahBtn.disabled = true;
-
                 if (coaId) {
                     const selectedCoa = coaDataStore.find(coa => coa.id == coaId);
                     if (selectedCoa) {
@@ -295,27 +344,25 @@
                     }
                 }
             });
-            
+        }
+        
+        if (popupElements.jumlah) {
             popupElements.jumlah.addEventListener('input', function() {
                 const jumlah = parseFloat(this.value);
                 const max = parseFloat(this.getAttribute('max'));
-                if (jumlah > max || jumlah <= 0 || isNaN(jumlah)) {
-                    popupElements.errorPagu.style.display = 'block';
-                    popupElements.tambahBtn.disabled = true;
-                } else {
-                    popupElements.errorPagu.style.display = 'none';
-                    popupElements.tambahBtn.disabled = false;
-                }
+                const isValid = !isNaN(jumlah) && jumlah > 0 && jumlah <= max;
+                popupElements.errorPagu.style.display = jumlah > max ? 'block' : 'none';
+                popupElements.tambahBtn.disabled = !isValid;
             });
+        }
 
+        if (popupElements.tambahBtn) {
             popupElements.tambahBtn.addEventListener('click', function() {
                 const coaId = popupElements.coa.value;
                 const coaText = popupElements.coa.options[popupElements.coa.selectedIndex].text;
                 const akunText = popupElements.akun.options[popupElements.akun.selectedIndex].text;
                 const jumlah = parseFloat(popupElements.jumlah.value);
-                
                 if (!coaId || !jumlah) { return; }
-
                 const newRow = document.createElement('tr');
                 newRow.innerHTML = `
                     <td class="px-4 py-2 border-b">${akunText}</td>
@@ -328,18 +375,28 @@
                     <input type="hidden" name="details[${coaId}][jumlah_diajukan]" value="${jumlah}">
                 `;
                 popupElements.rincianBody.appendChild(newRow);
-                elements.submitButton.disabled = false;
-                // Reset popup
+                if (elements.submitButton) elements.submitButton.disabled = false;
+                popupElements.akun.value = '';
+                popupElements.coa.innerHTML = '<option value="">-- Pilih Akun Belanja Dulu --</option>';
+                popupElements.coa.disabled = true;
+                popupElements.infoPagu.style.display = 'none';
+                popupElements.jumlah.value = '';
+                popupElements.jumlah.disabled = true;
+                popupElements.tambahBtn.disabled = true;
             });
-            
+        }
+        
+        if (popupElements.rincianBody) {
             popupElements.rincianBody.addEventListener('click', function(event) {
                 if (event.target.classList.contains('remove-item-btn')) {
                     event.target.closest('tr').remove();
                     if (popupElements.rincianBody.children.length === 0) {
-                        elements.submitButton.disabled = true;
+                        if (elements.submitButton) elements.submitButton.disabled = true;
                     }
                 }
             });
-        });
+        }
+    });
     </script>
-</x-app-layout>
+    @endpush
+</x-app-layout> 

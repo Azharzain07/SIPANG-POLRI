@@ -8,109 +8,105 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PengajuanExport;
+use App\Models\PengajuanDetail; // Pastikan ini di-import
 
 class PengajuanDashboardController extends Controller
 {
     /**
-     * Menampilkan halaman review untuk Admin, lengkap dengan ringkasan data.
+     * Menampilkan halaman review untuk Admin/PPK.
      */
     public function index(Request $request)
-{
-    // Logika query untuk tabel utama (ini bisa disesuaikan nanti)
-    $query = Pengajuan::with(['user', 'program', 'activity', 'kro']);
+    {
+        // Query dasar dengan Eager Loading untuk efisiensi
+        $query = Pengajuan::with(['user', 'details']);
 
-    $query->when($request->search, function ($q, $search) {
-        return $q->where('uraian', 'like', "%{$search}%");
-    });
+        // Terapkan filter pencarian jika ada
+        $query->when($request->search, function ($q, $search) {
+            return $q->where('uraian', 'like', "%{$search}%");
+        });
 
-    $pengajuans = $query->latest()->get();
+        // === INI PERBAIKANNYA: Ubah .get() menjadi .paginate() ===
+        $pengajuans = $query->latest()->paginate(10); // Menampilkan 10 data per halaman
 
-    // --- UBAH LOGIKA PERHITUNGAN DI SINI ---
-    // Hitung pending berdasarkan status NPWP karena itu tahap pertama
-    $pendingCount = Pengajuan::where('status_npwp', 'pending')->count();
-    
-    // Untuk dana diterima, kita asumsikan status final PPK adalah 'diterima'
-    $pengajuansDiterima = Pengajuan::where('status_ppk', 'diterima')->get();
-    
-    $totalDanaDiterima = 0;
-    foreach ($pengajuansDiterima as $pengajuan) {
-        $totalDanaDiterima += $pengajuan->details()->sum('jumlah_diajukan');
-    }
+        // --- Logika Perhitungan untuk Card Ringkasan (dibuat lebih efisien) ---
+        $pendingCount = Pengajuan::where('status_ppk', 'pending')
+                                 ->where('status_npwp', 'diterima')
+                                 ->count();
+        
+        $totalDanaDiterima = Pengajuan::where('status_ppk', 'diterima')
+                                    ->with('details')
+                                    ->get()
+                                    ->sum(function($p) {
+                                        return $p->details->sum('jumlah_diajukan');
+                                    });
 
-    $totalDanaDiajukan =\App\Models\PengajuanDetail::sum('jumlah_diajukan');
+        $totalDanaDiajukan = PengajuanDetail::sum('jumlah_diajukan');
 
-    return view('admin.pengajuan.index', compact(
-        'pengajuans',
-        'pendingCount',
-        'totalDanaDiterima',
-        'totalDanaDiajukan'
-    ));
+        return view('admin.pengajuan.index', compact(
+            'pengajuans',
+            'pendingCount',
+            'totalDanaDiterima',
+            'totalDanaDiajukan'
+        ));
     }
 
     /**
-     * Menyetujui sebuah pengajuan dan mengurangi budget user.
+     * Menyetujui pengajuan sebagai PPK.
      */
-        public function approve(Pengajuan $pengajuan)
+    public function approvePpk(Pengajuan $pengajuan)
     {
-        $user = $pengajuan->user;
-        $jumlahDiajukan = $pengajuan->jumlah_dana;
-
-        // INI ADALAH LOGIKA PENGECEKANNYA
-        if ($user->budget_tahunan < $jumlahDiajukan) {
-            // Jika budget kurang, kembali dengan pesan error
-            return back()->with('error', 'Budget user tidak mencukupi untuk menyetujui pengajuan ini.');
+        // PPK hanya bisa approve jika NPWP sudah approve
+        if ($pengajuan->status_npwp !== 'diterima') {
+            return back()->with('error', 'Pengajuan ini belum disetujui oleh NPWP.');
         }
 
-    // Jika budget cukup, lanjutkan proses
-    $user->budget_tahunan -= $jumlahDiajukan;
-    $user->save();
-    
-    $pengajuan->update(['status' => 'diterima']);
+        $pengajuan->status_ppk = 'diterima';
+        $pengajuan->ppk_processed_at = now();
+        $pengajuan->save();
 
-    return redirect()->route('admin.pengajuan.index')->with('success', 'Pengajuan berhasil disetujui.');
-}
+        return redirect()->route('admin.pengajuan.index')->with('success', 'Pengajuan berhasil disetujui.');
+    }
 
     /**
-     * Menolak sebuah pengajuan.
+     * Menolak pengajuan sebagai PPK.
      */
-    public function reject(Pengajuan $pengajuan)
+    public function rejectPpk(Pengajuan $pengajuan)
     {
-        // Cukup ubah statusnya
-        $pengajuan->update(['status' => 'ditolak']);
-        
+        $pengajuan->status_ppk = 'ditolak';
+        $pengajuan->ppk_processed_at = now();
+        $pengajuan->save();
+
         return redirect()->route('admin.pengajuan.index')->with('success', 'Pengajuan berhasil ditolak.');
     }
-    
-    // TAMBAHKAN METHOD BARU INI
+
+    /**
+     * Mengekspor data ke PDF.
+     */
     public function exportPDF(Request $request)
     {
-        // Logika query sama persis dengan method index()
-        $query = Pengajuan::with(['user', 'category']);
-
+        // Menggunakan query yang sama dengan function index untuk konsistensi
+        $query = Pengajuan::with(['user', 'details']);
         $query->when($request->search, function ($q, $search) {
-            return $q->where('judul', 'like', "%{$search}%");
+            return $q->where('uraian', 'like', "%{$search}%");
         });
-
         $pengajuans = $query->latest()->get();
 
-        // Buat PDF
         $pdf = PDF::loadView('admin.pengajuan.export-pdf', compact('pengajuans'));
-
-        // Download file PDF
-        return $pdf->download('laporan-pengajuan-anggaran-' . date('Y-m-d') . '.pdf');
+        return $pdf->download('laporan-pengajuan-' . date('Y-m-d') . '.pdf');
     }
+    
+    /**
+     * Mengekspor data ke Excel.
+     */
     public function exportExcel(Request $request)
     {
-        // Logika query sama persis dengan method index()
-        $query = Pengajuan::with(['user', 'category']);
-
+        // Menggunakan query yang sama dengan function index untuk konsistensi
+        $query = Pengajuan::with(['user', 'details']);
         $query->when($request->search, function ($q, $search) {
-            return $q->where('judul', 'like', "%{$search}%");
+            return $q->where('uraian', 'like', "%{$search}%");
         });
-
         $pengajuans = $query->latest()->get();
 
-        // Panggil class export dan unduh filenya
         return Excel::download(new PengajuanExport($pengajuans), 'laporan-pengajuan-' . date('Y-m-d') . '.xlsx');
     }
 }

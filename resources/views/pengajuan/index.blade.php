@@ -31,11 +31,15 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse ($pengajuans as $pengajuan)
                                     <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($pengajuan->tanggal_pengajuan)->format('d-m-Y') }}</td>
+                                        {{-- 1. Tanggal diformat lebih sederhana berkat $casts di Model --}}
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $pengajuan->tanggal_pengajuan->format('d-m-Y') }}</td>
+                                        
                                         <td class="px-6 py-4 whitespace-nowrap">{{ Str::limit($pengajuan->uraian, 50) }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right font-semibold">
+                                        
+                                       <td class="px-6 py-4 whitespace-nowrap text-right font-semibold">
                                             Rp {{ number_format($pengajuan->details->sum('jumlah_diajukan'), 0, ',', '.') }}
                                         </td>
+                                        
                                         <td class="px-6 py-4 whitespace-nowrap text-center">
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                                 @if($pengajuan->status_npwp == 'pending') bg-gray-100 text-gray-800 @endif
@@ -45,6 +49,7 @@
                                                 {{ ucfirst($pengajuan->status_npwp) }}
                                             </span>
                                         </td>
+
                                         <td class="px-6 py-4 whitespace-nowrap text-center">
                                              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                                 @if($pengajuan->status_ppk == 'pending') bg-gray-100 text-gray-800 @endif
@@ -54,17 +59,30 @@
                                                 {{ ucfirst($pengajuan->status_ppk) }}
                                             </span>
                                         </td>
+                                        
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                             <a href="{{ route('pengajuan.show', $pengajuan) }}" class="text-indigo-600 hover:text-indigo-900">Detail</a>
 
-                                            {{-- Logika untuk menampilkan tombol Edit & Hapus --}}
+                                            {{-- ========================================================== --}}
+                                            {{-- ========= 2. LOGIKA AKSI DIPERBAIKI DI SINI ============= --}}
+                                            {{-- ========================================================== --}}
+                                            
+                                            {{-- Tombol Edit & Hapus hanya muncul jika:
+                                                 1. User adalah PEMILIK pengajuan (dicek oleh Policy via @can).
+                                                 2. DAN status pengajuan masih 'pending'.
+                                            --}}
                                             @if ($pengajuan->status_npwp == 'pending' && $pengajuan->status_ppk == 'pending')
-                                                <a href="{{ route('pengajuan.edit', $pengajuan) }}" class="text-blue-600 hover:text-blue-900 ml-4">Edit</a>
-                                                <form action="{{ route('pengajuan.destroy', $pengajuan) }}" method="POST" class="inline-block ml-4" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengajuan ini?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
-                                                </form>
+                                                @can('update', $pengajuan)
+                                                    <a href="{{ route('pengajuan.edit', $pengajuan) }}" class="text-blue-600 hover:text-blue-900 ml-4">Edit</a>
+                                                @endcan
+
+                                                @can('delete', $pengajuan)
+                                                    <form action="{{ route('pengajuan.destroy', $pengajuan) }}" method="POST" class="inline-block ml-4" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengajuan ini?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="text-red-600 hover:text-red-900">Hapus</button>
+                                                    </form>
+                                                @endcan
                                             @endif
                                         </td>
                                     </tr>

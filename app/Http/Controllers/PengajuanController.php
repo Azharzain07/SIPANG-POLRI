@@ -2,79 +2,80 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Program;
-use App\Models\Sumberdana;
+// TAMBAHKAN SEMUA MODEL YANG DIBUTUHKAN OLEH FORM CREATE
+use App\Models\Pengajuan;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use Illuminate\Http\Request;
+use App\Models\SumberDana;
+use App\Models\Program;
 use App\Models\Activity;
 use App\Models\Kro;
-use App\Models\Account; 
+use App\Models\Account;
 use App\Models\Coa;
-use App\Models\Pengajuan;
-use App\Models\PengajuanDetail;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class PengajuanController extends Controller
 {
-    /**
-     * Menampilkan daftar riwayat pengajuan milik user yang sedang login.
-     */
+    use AuthorizesRequests;
 
-    public function getActivities($programId)
-    {
-        $activities = Activity::where('program_id', $programId)->get();
-        return response()->json($activities);
+   public function index()
+{
+    $user = auth()->user();
+
+    // Tambahkan with('details') untuk Eager Loading
+    $query = Pengajuan::with('details');
+
+    if (in_array($user->role, ['ppk', 'npwp', 'admin'])) {
+        // Admin bisa melihat semua pengajuan
+        $pengajuans = $query->latest()->paginate(10);
+    } else {
+        // User biasa hanya melihat pengajuan miliknya sendiri
+        $pengajuans = $query->where('user_id', $user->id)->latest()->paginate(10);
     }
-
-
-     public function getKros($activityId)
-    {
-        $kros = Kro::where('activity_id', $activityId)->get();
-        return response()->json($kros);
-    }
-
-
-    public function index()
-    {
-        // Ambil semua pengajuan milik user yang login
-        // 'with' digunakan untuk mengambil data relasi agar lebih efisien (Eager Loading)
-        $pengajuans = Pengajuan::with(['details'])
-            ->where('user_id', auth()->id())
-            ->latest() // Urutkan dari yang paling baru
-            ->get();
-
-        return view('pengajuan.index', compact('pengajuans'));
-    }
+    
+    return view('pengajuan.index', compact('pengajuans'));
+}
 
     /**
      * Menampilkan form untuk membuat pengajuan baru.
      */
-     public function create()
+    public function create()
     {
-        // Ambil data untuk dropdown dari database
+        // Ambil semua data yang dibutuhkan untuk dropdown di form
         $ppkUsers = User::where('role', 'ppk')->get();
         $npwpUsers = User::where('role', 'npwp')->get();
         $sumberDanas = SumberDana::all();
         $programs = Program::all();
+        // Anda bisa menambahkan data lain yang dibutuhkan di sini
+        // $activities = Activity::all(); 
+        // $kros = Kro::all();
+        // $accounts = Account::all();
 
-        // Kirim semua data ke view
-        return view('pengajuan.create', compact('ppkUsers', 'npwpUsers', 'sumberDanas', 'programs'));
+        // Kirim semua data tersebut ke view
+        return view('pengajuan.create', compact(
+            'ppkUsers', 
+            'npwpUsers', 
+            'sumberDanas',
+            'programs'
+            // 'activities',
+            // 'kros',
+            // 'accounts'
+        ));
     }
 
-
     /**
-     * Menyimpan pengajuan baru ke database.
+     * Menyimpan pengajuan baru ke dalam database.
      */
-  // app/Http/Controllers/PengajuanController.php
-
-public function store(Request $request)
+   public function store(Request $request)
 {
-    // 1. Validasi SEMUA input yang dibutuhkan oleh database
     $validatedData = $request->validate([
-        'tanggal_pengajuan' => 'required|date|after_or_equal:today',
+        'tanggal_pengajuan' => 'required|date',
         'ppk_user_id' => 'required|exists:users,id',
         'npwp_user_id' => 'required|exists:users,id',
         'sumber_dana_id' => 'required|exists:sumber_danas,id',
-        'uraian' => 'required|string', // <-- Pastikan ini ada
+        'uraian' => 'required|string|max:255',
         'program_id' => 'required|exists:programs,id',
         'activity_id' => 'required|exists:activities,id',
         'kro_id' => 'required|exists:kros,id',
@@ -82,118 +83,177 @@ public function store(Request $request)
         'details.*.coa_id' => 'required|exists:coas,id',
         'details.*.jumlah_diajukan' => 'required|numeric|min:1',
     ]);
-    
-    // 2. Tambahkan data user yang login ke data utama
-    $validatedData['user_id'] = auth()->id();
+     try {
+        DB::transaction(function () use ($validatedData) {
+            // 1. Buat data pengajuan utama
+            $pengajuan = Pengajuan::create([
+                'user_id'           => auth()->id(),
+                'tanggal_pengajuan' => $validatedData['tanggal_pengajuan'],
+                'ppk_user_id'       => $validatedData['ppk_user_id'],
+                'npwp_user_id'      => $validatedData['npwp_user_id'],
+                'sumber_dana_id'    => $validatedData['sumber_dana_id'],
+                'uraian'            => $validatedData['uraian'],
+                'program_id'        => $validatedData['program_id'],
+                'activity_id'       => $validatedData['activity_id'],
+                'kro_id'            => $validatedData['kro_id'],
+            ]);
 
-    // 3. Simpan data ke tabel induk (pengajuans)
-    $pengajuan = Pengajuan::create($validatedData);
-
-    // 4. Looping dan simpan data ke tabel anak (pengajuan_details)
-    foreach ($request->details as $detail) {
-        PengajuanDetail::create([
-            'pengajuan_id' => $pengajuan->id,
-            'coa_id' => $detail['coa_id'],
-            'jumlah_diajukan' => $detail['jumlah_diajukan'],
-        ]);
+            // 2. Loop dan simpan setiap rincian belanja (details)
+            // Pastikan relasi 'details()' sudah ada di model Pengajuan
+            foreach ($validatedData['details'] as $detail) {
+                $pengajuan->details()->create([
+                    'coa_id' => $detail['coa_id'],
+                    'jumlah_diajukan' => $detail['jumlah_diajukan'],
+                ]);
+            }
+        });
+    } catch (\Exception $e) {
+        // Jika terjadi error, kembali dengan pesan error
+        return back()->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage())->withInput();
     }
 
-    return redirect()->route('pengajuan.index')->with('success', 'Pengajuan berhasil dikirim dan sedang ditinjau.');
+    // Jika berhasil, redirect dengan pesan sukses
+    return redirect()->route('pengajuan.index')->with('success', 'Pengajuan berhasil dibuat.');
 }
-    /**
-     * Menampilkan form untuk mengedit pengajuan.
-     */
-    public function edit(Pengajuan $pengajuan)
-    {
-        // Keamanan: Pastikan user hanya bisa edit pengajuannya sendiri & statusnya pending
-        if ($pengajuan->user_id != auth()->id() || $pengajuan->status != 'pending') {
-            abort(403, 'AKSI TIDAK DIIZINKAN.');
-        }
-
-        // Ambil daftar Bagian untuk dropdown
-        $bagianList = Category::orderBy('nama_kategori', 'asc')->get();
-
-        return view('pengajuan.edit', compact('pengajuan', 'bagianList'));
-    }
     
-    /**
-     * Memperbarui data pengajuan di database.
-     */
+    // ... sisa method lainnya (show, edit, update, destroy) ...
+    public function show(Pengajuan $pengajuan)
+    {
+        $this->authorize('view', $pengajuan);
+        return view('pengajuan.show', compact('pengajuan'));
+    }
+
+   public function edit(Pengajuan $pengajuan)
+    {
+        // 1. Otorisasi: Memastikan hanya pemilik yang bisa mengakses halaman ini.
+        $this->authorize('update', $pengajuan);
+
+        // 2. Mengambil semua data master yang dibutuhkan untuk mengisi pilihan dropdown.
+        $sumberDanas = SumberDana::all();
+        $programs = Program::all();
+
+        // 3. Eager Loading: Memuat relasi yang dibutuhkan oleh view agar efisien.
+        // Ini akan mengambil data rincian (details) beserta relasi turunannya.
+        $pengajuan->load(['details.coa.account']);
+
+        // 4. Mengirim semua data yang sudah disiapkan ke view 'pengajuan.edit'.
+        return view('pengajuan.edit', compact(
+            'pengajuan',
+            'sumberDanas',
+            'programs'
+        ));
+    }
+
     public function update(Request $request, Pengajuan $pengajuan)
-    {
-        // Keamanan: Pastikan user hanya bisa update pengajuannya sendiri & statusnya pending
-        if ($pengajuan->user_id != auth()->id() || $pengajuan->status != 'pending') {
-            abort(403, 'AKSI TIDAK DIIZINKAN.');
-        }
+{
+    // 1. Otorisasi: Pastikan hanya pemilik yang bisa menyimpan perubahan.
+    $this->authorize('update', $pengajuan);
 
-        $validatedData = $request->validate([
-            'tanggal_pengajuan' => 'required|date|after_or_equal:today',
-            'judul' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
-            'jumlah_dana' => 'required|numeric|min:1',
-            'deskripsi' => 'required|string',
-            'lampiran' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-        ]);
+    // 2. Validasi: Pastikan semua data yang dikirim dari form edit valid.
+    $validatedData = $request->validate([
+        'tanggal_pengajuan' => 'required|date',
+        'sumber_dana_id' => 'required|exists:sumber_danas,id',
+        'uraian' => 'required|string|max:255',
+        'program_id' => 'required|exists:programs,id',
+        'activity_id' => 'required|exists:activities,id',
+        'kro_id' => 'required|exists:kros,id',
+        'details' => 'required|array', // Pastikan rinciannya ada
+        'details.*.coa_id' => 'required|exists:coas,id',
+        'details.*.jumlah_diajukan' => 'required|numeric|min:1',
+    ]);
 
-        // Logika untuk upload file baru jika ada
-        if ($request->hasFile('lampiran')) {
-            // (Opsional) Tambahkan logika untuk hapus file lama jika ada
-            $path = $request->file('lampiran')->store('lampiran-pengajuan', 'public');
-            $validatedData['lampiran'] = $path;
-        }
+    try {
+        // 3. Memulai Transaksi Database: Untuk menjaga integritas data.
+        DB::transaction(function () use ($pengajuan, $validatedData) {
+            
+            // 4. Update data utama di tabel 'pengajuans'.
+            $pengajuan->update([
+                'tanggal_pengajuan' => $validatedData['tanggal_pengajuan'],
+                'sumber_dana_id'    => $validatedData['sumber_dana_id'],
+                'uraian'            => $validatedData['uraian'],
+                'program_id'        => $validatedData['program_id'],
+                'activity_id'       => $validatedData['activity_id'],
+                'kro_id'            => $validatedData['kro_id'],
+            ]);
 
-        $pengajuan->update($validatedData);
+            // 5. SINKRONISASI RINCIAN: Hapus semua rincian lama.
+            $pengajuan->details()->delete();
 
-        return redirect()->route('pengajuan.index')->with('success', 'Pengajuan berhasil diperbarui.');
+            // 6. Buat ulang semua rincian dengan data baru dari form.
+            foreach ($validatedData['details'] as $detail) {
+                $pengajuan->details()->create([
+                    'coa_id' => $detail['coa_id'],
+                    'jumlah_diajukan' => $detail['jumlah_diajukan'],
+                ]);
+            }
+        });
+
+    } catch (\Exception $e) {
+        // Jika terjadi error, kembali ke form dengan pesan error.
+        return back()->with('error', 'Terjadi kesalahan saat memperbarui data: ' . $e->getMessage())->withInput();
     }
-    
-    /**
-     * Menghapus pengajuan dari database.
-     */
+
+    // 7. Redirect kembali ke halaman index dengan pesan sukses.
+    return redirect()->route('pengajuan.index')->with('success', 'Pengajuan berhasil diperbarui.');
+}
+
     public function destroy(Pengajuan $pengajuan)
     {
-        // Keamanan: Pastikan user hanya bisa hapus pengajuannya sendiri & statusnya pending
-        if ($pengajuan->user_id != auth()->id() || $pengajuan->status != 'pending') {
-            abort(403, 'AKSI TIDAK DIIZINKAN.');
-        }
-        
-        // (Opsional) Tambahkan logika untuk hapus file lampiran dari storage
-        
+        $this->authorize('delete', $pengajuan);
         $pengajuan->delete();
-        
         return redirect()->route('pengajuan.index')->with('success', 'Pengajuan berhasil dihapus.');
     }
-    // app/Http/Controllers/PengajuanController.php
-
-public function show(Pengajuan $pengajuan)
+     
+    public function getActivities($programId)
 {
-    // Keamanan: Pastikan user hanya bisa melihat pengajuannya sendiri,
-    // sementara admin (NPWP & PPK) bisa melihat semua.
-    $user = auth()->user();
-    if ($user->role == 'polsek' || $user->role == 'bagian') {
-        if ($pengajuan->user_id != $user->id) {
-            abort(403);
-        }
+    try {
+        $activities = \App\Models\Activity::where('program_id', $programId)->get();
+        return response()->json($activities);
+    } catch (\Exception $e) {
+        // Catat error ke log dan kirim response JSON error, BUKAN HTML
+        \Log::error('Error di getActivities: ' . $e->getMessage());
+        return response()->json(['error' => 'Gagal mengambil data.'], 500);
     }
-
-    // Load semua relasi yang dibutuhkan agar efisien
-    $pengajuan->load(['user', 'program', 'activity', 'kro', 'sumberDana', 'details.coa.account']);
-    
-    return view('pengajuan.show', compact('pengajuan'));
 }
 
+public function getKros($activityId)
+{
+    try {
+        $kros = \App\Models\Kro::where('activity_id', $activityId)->get();
+        return response()->json($kros);
+    } catch (\Exception $e) {
+        \Log::error($e);
+        return response()->json(['error' => 'Gagal mengambil data KRO.'], 500);
+    }
+}
 
-// METHOD BARU UNTUK MENGAMBIL AKUN BELANJA
-    public function getAccounts()
-    {
-        $accounts = Account::orderBy('nama_akun_belanja', 'asc')->get();
+public function getAccounts()
+{
+    try {
+        // Pastikan model 'Account' ada dan tabel 'accounts' ada isinya
+        $accounts = Account::all();
         return response()->json($accounts);
+    } catch (\Exception $e) {
+        // Catat error yang sebenarnya ke dalam log Laravel untuk debugging
+        \Log::error('Gagal mengambil data Akun Belanja: ' . $e->getMessage());
+        
+        // Kirim response JSON yang jelas bahwa ada error server
+        return response()->json(['error' => 'Terjadi kesalahan pada server.'], 500);
     }
-
-    // METHOD BARU UNTUK MENGAMBIL COA
-    public function getCoas($accountId)
-    {
-        $coas = Coa::where('account_id', $accountId)->get();
+}
+public function getCoas($accountId)
+{
+    try {
+        // Ambil semua data COA yang memiliki 'account_id' yang sesuai
+        // Pastikan nama kolom 'account_id' sudah benar
+        $coas = \App\Models\Coa::where('account_id', $accountId)->get();
+        
         return response()->json($coas);
+
+    } catch (\Exception $e) {
+        // Jika ada error, catat ke log dan kirim response JSON error
+        \Log::error('Gagal mengambil data COA: ' . $e->getMessage());
+        return response()->json(['error' => 'Gagal mengambil data COA dari server.'], 500);
     }
+}
 }

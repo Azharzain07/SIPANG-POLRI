@@ -8,7 +8,6 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            <!-- Notifikasi Sukses/Error -->
             <div class="mb-4">
                 @if (session('success'))
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
@@ -26,7 +25,6 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     
-                    <!-- FORM PENCARIAN & TOMBOL EKSPOR -->
                     <div class="mb-4">
                         <form action="{{ route('admin.pengajuan.index') }}" method="GET" class="flex items-center space-x-2">
                             <input type="text" name="search" class="w-full md:w-1/3 rounded-md shadow-sm border-gray-300" value="{{ request('search') }}" placeholder="Cari berdasarkan judul...">
@@ -36,14 +34,12 @@
                             <a href="{{ route('admin.pengajuan.exportPDF', ['search' => request('search')]) }}" class="px-4 py-2 bg-red-600 border rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500">
                                 Ekspor PDF
                             </a>
-                            <!-- Tombol Ekspor Excel Diaktifkan Kembali -->
                             <a href="{{ route('admin.pengajuan.exportExcel', ['search' => request('search')]) }}" class="px-4 py-2 bg-green-600 border rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500">
                                 Ekspor Excel
                             </a>
                         </form>
                     </div>
 
-                    <!-- Card Ringkasan -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                         <div class="bg-yellow-100 p-4 rounded-lg shadow">
                             <h3 class="font-bold text-yellow-800">Pengajuan Pending</h3>
@@ -51,65 +47,70 @@
                         </div>
                         <div class="bg-green-100 p-4 rounded-lg shadow">
                             <h3 class="font-bold text-green-800">Total Dana Disetujui</h3>
-                            <p class="text-2xl font-semibold text-green-900">Rp {{ number_format($totalDanaDiterima, 2, ',', '.') }}</p>
+                            <p class="text-2xl font-semibold text-green-900">Rp {{ number_format($totalDanaDiterima, 0, ',', '.') }}</p>
                         </div>
                         <div class="bg-blue-100 p-4 rounded-lg shadow">
                             <h3 class="font-bold text-blue-800">Total Dana Diajukan</h3>
-                            <p class="text-2xl font-semibold text-blue-900">Rp {{ number_format($totalDanaDiajukan, 2, ',', '.') }}</p>
+                            <p class="text-2xl font-semibold text-blue-900">Rp {{ number_format($totalDanaDiajukan, 0, ',', '.') }}</p>
                         </div>
                     </div>
 
-                    <!-- Tabel Data Pengajuan -->
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Pengaju</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Polsek</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judul</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bagian</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Persetujuan</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status NPWP</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status PPK</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Persetujuan</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse ($pengajuans as $pengajuan)
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($pengajuan->tanggal_pengajuan)->format('d-m-Y') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ $pengajuan->tanggal_pengajuan->format('d-m-Y') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $pengajuan->user->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $pengajuan->user->nama_polsek }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        {{ $pengajuan->judul }}
+                                        {{ Str::limit($pengajuan->uraian, 40) }}
                                         @if ($pengajuan->lampiran)
                                             <a href="{{ asset('storage/' . $pengajuan->lampiran) }}" target="_blank" class="text-xs text-blue-500 block hover:underline">[Lihat Lampiran]</a>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $pengajuan->category->nama_kategori ?? '-' }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                            @if($pengajuan->status == 'pending') bg-yellow-100 text-yellow-800 @endif
-                                            @if($pengajuan->status == 'diterima') bg-green-100 text-green-800 @endif
-                                            @if($pengajuan->status == 'ditolak') bg-red-100 text-red-800 @endif
+                                            @if($pengajuan->status_npwp == 'pending') bg-gray-100 text-gray-800 @endif
+                                            @if($pengajuan->status_npwp == 'diterima') bg-green-100 text-green-800 @endif
+                                            @if($pengajuan->status_npwp == 'ditolak') bg-red-100 text-red-800 @endif
                                         ">
-                                            {{ ucfirst($pengajuan->status) }}
+                                            {{ ucfirst($pengajuan->status_npwp) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <!-- Tombol Detail ditambahkan di sini -->
-                                        <a href="{{ route('pengajuan.show', $pengajuan->id) }}" class="text-blue-600 hover:text-blue-900">Detail</a>
-
-                                        @if ($pengajuan->status == 'pending')
-                                            <form action="{{ route('admin.pengajuan.approve', $pengajuan->id) }}" method="POST" class="inline-block ml-4">
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            @if($pengajuan->status_ppk == 'pending') bg-gray-100 text-gray-800 @endif
+                                            @if($pengajuan->status_ppk == 'diterima') bg-green-100 text-green-800 @endif
+                                            @if($pengajuan->status_ppk == 'ditolak') bg-red-100 text-red-800 @endif
+                                        ">
+                                            {{ ucfirst($pengajuan->status_ppk) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <a href="{{ route('pengajuan.show', $pengajuan) }}" class="text-indigo-600 hover:text-indigo-900 font-semibold">Detail</a>
+                                        
+                                        {{-- Tampilkan tombol hanya jika status NPWP sudah diterima & status PPK masih pending --}}
+                                        @if ($pengajuan->status_npwp == 'diterima' && $pengajuan->status_ppk == 'pending')
+                                            <form action="{{ route('admin.pengajuan.approvePpk', $pengajuan) }}" method="POST" class="inline-block ml-4" onsubmit="return confirm('Anda yakin ingin MENYETUJUI pengajuan ini?');">
                                                 @csrf
-                                                <button type="submit" class="text-green-600 hover:text-green-900">Setujui</button>
+                                                <button type="submit" class="text-green-600 hover:text-green-900 font-bold">Approve</button>
                                             </form>
-                                            <form action="{{ route('admin.pengajuan.reject', $pengajuan->id) }}" method="POST" class="inline-block ml-4">
+                                            <form action="{{ route('admin.pengajuan.rejectPpk', $pengajuan) }}" method="POST" class="inline-block ml-4" onsubmit="return confirm('Anda yakin ingin MENOLAK pengajuan ini?');">
                                                 @csrf
-                                                <button type="submit" class="text-red-600 hover:text-red-900">Tolak</button>
+                                                <button type="submit" class="text-red-600 hover:text-red-900 font-bold">Reject</button>
                                             </form>
                                         @else
-                                            <span class="text-gray-500 ml-4">Diproses</span>
+                                            <span class="text-gray-400 ml-4 italic">No Action</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -123,10 +124,13 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <div class="mt-6">
+                        {{ $pengajuans->links() }}
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
 </x-app-layout>
-
-    

@@ -15,7 +15,8 @@ class IsAdmin
      */
     public function handle(Request $request, Closure $next): Response
 {
-    if (auth()->check() && auth()->user()->role == 'admin') {
+    // Sekarang mengizinkan 'admin' DAN 'ppk'
+    if (in_array(auth()->user()->role, ['admin', 'ppk'])) {
         return $next($request);
     }
 
