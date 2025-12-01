@@ -1,0 +1,87 @@
+<br />
+<b>Warning</b>:  Undefined array key "tanggal" in <b>C:\xampp\htdocs\api\main.php</b> on line <b>876</b><br />
+<br />
+<b>Warning</b>:  Undefined array key "bulan" in <b>C:\xampp\htdocs\api\main.php</b> on line <b>880</b><br />
+<br />
+<b>Warning</b>:  Undefined array key "kode" in <b>C:\xampp\htdocs\api\main.php</b> on line <b>888</b><br />
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Semua Pengajuan Anggaran - 27/10/2025</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .title { font-size: 20px; font-weight: bold; }
+            .subtitle { font-size: 14px; color: #666; }
+            .summary { margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px; }
+            .pengajuan-item { margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; page-break-inside: avoid; }
+            .pengajuan-header { font-weight: bold; font-size: 16px; margin-bottom: 15px; color: #1a5490; }
+            .field { margin: 8px 0; }
+            .label { font-weight: bold; display: inline-block; width: 200px; }
+            .value { display: inline-block; }
+            .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="title">SEMUA PENGAJUAN ANGGARAN POLRI</div>
+            <div class="subtitle">Tanggal: 27/10/2025 16:46:00</div>
+        </div>
+        
+        <div class="summary">
+            <h3>Ringkasan</h3>
+            <p><strong>Total Pengajuan:</strong> 1 pengajuan</p>
+            <p><strong>Total Jumlah:</strong> Rp 32.000.000</p>
+        </div>
+        <div class="pengajuan-item">
+            <div class="pengajuan-header">Pengajuan #1 - BU-202510-0001</div>
+            
+            <div class="field">
+                <span class="label">Tanggal Pengajuan:</span>
+                <span class="value"></span>
+            </div>
+            <div class="field">
+                <span class="label">Bulan Pengajuan:</span>
+                <span class="value"></span>
+            </div>
+            <div class="field">
+                <span class="label">Program/Kegiatan:</span>
+                <span class="value">PATROLI LANTAS POLSEK</span>
+            </div>
+            <div class="field">
+                <span class="label">Kode:</span>
+                <span class="value"></span>
+            </div>
+            <div class="field">
+                <span class="label">Uraian:</span>
+                <span class="value">uraian anggaran hari ini</span>
+            </div>
+            <div class="field">
+                <span class="label">Jumlah Diajukan:</span>
+                <span class="value">Rp 32.000.000</span>
+            </div>
+            <div class="field">
+                <span class="label">Penanggung Jawab:</span>
+                <span class="value">KASAT</span>
+            </div>
+            <div class="field">
+                <span class="label">Bendahara Pengeluaran:</span>
+                <span class="value">KASIUM</span>
+            </div>
+            <div class="field">
+                <span class="label">Status:</span>
+                <span class="value">TERIMA SIKEU</span>
+            </div>
+            <div class="field">
+                <span class="label">Pengguna:</span>
+                <span class="value">Kaur Rena Garut Kota (USER_SATFUNG)</span>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Dokumen ini dibuat secara otomatis oleh sistem SIPANG POLRI</p>
+            <p>Tanggal cetak: 27/10/2025 16:46:00</p>
+        </div>
+    </body>
+    </html>

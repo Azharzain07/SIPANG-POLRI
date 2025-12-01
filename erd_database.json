@@ -1,0 +1,740 @@
+{
+  "database": {
+    "name": "sipang_polri",
+    "charset": "utf8mb4",
+    "collation": "utf8mb4_unicode_ci",
+    "description": "SIPANG POLRI - Sistem Informasi Pengajuan Anggaran Polri (Budget Proposal Information System)",
+    "created": "2024"
+  },
+  "tables": [
+    {
+      "name": "polsek",
+      "description": "Police Station/Kepolisian Sektor",
+      "type": "dimension",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "key": "PRIMARY",
+          "auto_increment": true,
+          "null": false
+        },
+        {
+          "name": "nama",
+          "type": "VARCHAR(100)",
+          "null": false,
+          "description": "Police station name"
+        },
+        {
+          "name": "kode",
+          "type": "VARCHAR(20)",
+          "key": "UNIQUE",
+          "null": false,
+          "description": "Police station code"
+        },
+        {
+          "name": "alamat",
+          "type": "TEXT",
+          "null": true,
+          "description": "Office address"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "default": "CURRENT_TIMESTAMP",
+          "null": false
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "default": "CURRENT_TIMESTAMP",
+          "on_update": "CURRENT_TIMESTAMP",
+          "null": false
+        }
+      ],
+      "relationships": [
+        {
+          "type": "1:N",
+          "target_table": "users",
+          "target_column": "polsek_id",
+          "constraint": "fk_users_polsek",
+          "on_delete": "SET NULL"
+        },
+        {
+          "type": "1:N",
+          "target_table": "pengajuan",
+          "target_column": "polsek_id",
+          "constraint": "fk_pengajuan_polsek",
+          "on_delete": "CASCADE"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": ["id"]
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "description": "User accounts with role-based access control",
+      "type": "dimension",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "key": "PRIMARY",
+          "auto_increment": true,
+          "null": false
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR(50)",
+          "key": "UNIQUE",
+          "null": false,
+          "description": "Login username"
+        },
+        {
+          "name": "password",
+          "type": "VARCHAR(255)",
+          "null": false,
+          "description": "Hashed password (bcrypt)"
+        },
+        {
+          "name": "nama_lengkap",
+          "type": "VARCHAR(100)",
+          "null": false,
+          "description": "Full name"
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(100)",
+          "null": true,
+          "description": "Email address"
+        },
+        {
+          "name": "role",
+          "type": "ENUM",
+          "values": ["USER_SATFUNG", "USER_POLSEK", "ADMIN_BAGREN", "ADMIN_SIKEU"],
+          "null": false,
+          "description": "User role for permission control"
+        },
+        {
+          "name": "polsek_id",
+          "type": "INT",
+          "key": "FOREIGN",
+          "references": "polsek.id",
+          "null": true,
+          "description": "Associated police station"
+        },
+        {
+          "name": "jabatan",
+          "type": "VARCHAR(100)",
+          "null": true,
+          "description": "Job position"
+        },
+        {
+          "name": "nip",
+          "type": "VARCHAR(20)",
+          "null": true,
+          "description": "Employee ID number"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "default": true,
+          "null": false,
+          "description": "Account status"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "default": "CURRENT_TIMESTAMP",
+          "null": false
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "default": "CURRENT_TIMESTAMP",
+          "on_update": "CURRENT_TIMESTAMP",
+          "null": false
+        }
+      ],
+      "relationships": [
+        {
+          "type": "N:1",
+          "parent_table": "polsek",
+          "parent_column": "id",
+          "foreign_key": "polsek_id"
+        },
+        {
+          "type": "1:N",
+          "target_table": "pengajuan",
+          "target_column": "user_id",
+          "constraint": "fk_pengajuan_user"
+        },
+        {
+          "type": "1:N",
+          "target_table": "pengajuan_status_log",
+          "target_column": "user_id",
+          "constraint": "fk_log_user"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": ["id"]
+        },
+        {
+          "name": "UNIQUE",
+          "columns": ["username"]
+        }
+      ]
+    },
+    {
+      "name": "kegiatan",
+      "description": "Budget activities/budget line items",
+      "type": "dimension",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "key": "PRIMARY",
+          "auto_increment": true,
+          "null": false
+        },
+        {
+          "name": "nama",
+          "type": "VARCHAR(255)",
+          "null": false,
+          "description": "Activity name"
+        },
+        {
+          "name": "kode",
+          "type": "VARCHAR(50)",
+          "key": "UNIQUE",
+          "null": false,
+          "description": "Budget code/classification"
+        },
+        {
+          "name": "pagu",
+          "type": "DECIMAL(15,2)",
+          "default": 0,
+          "null": false,
+          "description": "Budget allocation amount"
+        },
+        {
+          "name": "sumber_dana",
+          "type": "ENUM",
+          "values": ["RM", "PNBP"],
+          "null": false,
+          "description": "Funding source (RM=Regular Budget, PNBP=Non-Tax Revenue)"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "default": "CURRENT_TIMESTAMP",
+          "null": false
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "default": "CURRENT_TIMESTAMP",
+          "on_update": "CURRENT_TIMESTAMP",
+          "null": false
+        }
+      ],
+      "relationships": [
+        {
+          "type": "1:N",
+          "target_table": "pengajuan",
+          "target_column": "kegiatan_id",
+          "constraint": "fk_pengajuan_kegiatan"
+        },
+        {
+          "type": "1:N",
+          "target_table": "pengajuan_detail",
+          "target_column": "kegiatan_id",
+          "constraint": "fk_detail_kegiatan"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": ["id"]
+        }
+      ]
+    },
+    {
+      "name": "pengajuan",
+      "description": "Budget proposals/submissions - main fact table",
+      "type": "fact",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "key": "PRIMARY",
+          "auto_increment": true,
+          "null": false
+        },
+        {
+          "name": "nomor_surat",
+          "type": "VARCHAR(50)",
+          "key": "UNIQUE",
+          "null": false,
+          "description": "Document number"
+        },
+        {
+          "name": "tanggal_pengajuan",
+          "type": "DATE",
+          "null": false,
+          "description": "Submission date"
+        },
+        {
+          "name": "bulan_pengajuan",
+          "type": "VARCHAR(20)",
+          "null": false,
+          "description": "Submission month"
+        },
+        {
+          "name": "tahun_pengajuan",
+          "type": "YEAR",
+          "null": false,
+          "description": "Submission year"
+        },
+        {
+          "name": "sumber_dana",
+          "type": "ENUM",
+          "values": ["RM", "PNBP"],
+          "null": false,
+          "description": "Funding source"
+        },
+        {
+          "name": "uraian",
+          "type": "TEXT",
+          "null": false,
+          "description": "Description/purpose"
+        },
+        {
+          "name": "penanggung_jawab",
+          "type": "VARCHAR(100)",
+          "null": false,
+          "description": "Responsible person"
+        },
+        {
+          "name": "bendahara_pengeluaran_pembantu",
+          "type": "VARCHAR(100)",
+          "null": false,
+          "description": "Treasurer name"
+        },
+        {
+          "name": "kegiatan_id",
+          "type": "INT",
+          "key": "FOREIGN",
+          "references": "kegiatan.id",
+          "null": false,
+          "description": "Activity/budget code"
+        },
+        {
+          "name": "jumlah_diajukan",
+          "type": "DECIMAL(15,2)",
+          "null": false,
+          "description": "Amount requested"
+        },
+        {
+          "name": "jumlah_pagu",
+          "type": "DECIMAL(15,2)",
+          "null": false,
+          "description": "Total budget allocation"
+        },
+        {
+          "name": "sisa_pagu",
+          "type": "DECIMAL(15,2)",
+          "null": false,
+          "description": "Remaining budget"
+        },
+        {
+          "name": "status",
+          "type": "ENUM",
+          "values": [
+            "DRAFT",
+            "TERKIRIM",
+            "TERIMA_BERKAS",
+            "DISPOSISI_KABAG_REN",
+            "DISPOSISI_WAKA",
+            "TERIMA_SIKEU",
+            "DIBAYARKAN",
+            "DITOLAK"
+          ],
+          "default": "DRAFT",
+          "null": false,
+          "description": "Current approval status"
+        },
+        {
+          "name": "status_keterangan",
+          "type": "TEXT",
+          "null": true,
+          "description": "Status change notes/rejection reason"
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": "FOREIGN",
+          "references": "users.id",
+          "null": false,
+          "description": "Submitting user"
+        },
+        {
+          "name": "polsek_id",
+          "type": "INT",
+          "key": "FOREIGN",
+          "references": "polsek.id",
+          "null": false,
+          "description": "Police station"
+        },
+        {
+          "name": "file_path",
+          "type": "VARCHAR(255)",
+          "null": true,
+          "description": "Uploaded document file path"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "default": "CURRENT_TIMESTAMP",
+          "null": false
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "default": "CURRENT_TIMESTAMP",
+          "on_update": "CURRENT_TIMESTAMP",
+          "null": false
+        }
+      ],
+      "relationships": [
+        {
+          "type": "N:1",
+          "parent_table": "kegiatan",
+          "parent_column": "id",
+          "foreign_key": "kegiatan_id"
+        },
+        {
+          "type": "N:1",
+          "parent_table": "users",
+          "parent_column": "id",
+          "foreign_key": "user_id"
+        },
+        {
+          "type": "N:1",
+          "parent_table": "polsek",
+          "parent_column": "id",
+          "foreign_key": "polsek_id"
+        },
+        {
+          "type": "1:N",
+          "target_table": "pengajuan_detail",
+          "target_column": "pengajuan_id",
+          "constraint": "fk_detail_pengajuan",
+          "on_delete": "CASCADE"
+        },
+        {
+          "type": "1:N",
+          "target_table": "pengajuan_status_log",
+          "target_column": "pengajuan_id",
+          "constraint": "fk_log_pengajuan",
+          "on_delete": "CASCADE"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": ["id"]
+        },
+        {
+          "name": "idx_pengajuan_tanggal",
+          "columns": ["tanggal_pengajuan"]
+        },
+        {
+          "name": "idx_pengajuan_status",
+          "columns": ["status"]
+        },
+        {
+          "name": "idx_pengajuan_user",
+          "columns": ["user_id"]
+        },
+        {
+          "name": "idx_pengajuan_polsek",
+          "columns": ["polsek_id"]
+        }
+      ]
+    },
+    {
+      "name": "pengajuan_detail",
+      "description": "Line items within budget proposals",
+      "type": "fact",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "key": "PRIMARY",
+          "auto_increment": true,
+          "null": false
+        },
+        {
+          "name": "pengajuan_id",
+          "type": "INT",
+          "key": "FOREIGN",
+          "references": "pengajuan.id",
+          "null": false,
+          "description": "Parent proposal"
+        },
+        {
+          "name": "kegiatan_id",
+          "type": "INT",
+          "key": "FOREIGN",
+          "references": "kegiatan.id",
+          "null": false,
+          "description": "Activity code"
+        },
+        {
+          "name": "kode",
+          "type": "VARCHAR(50)",
+          "null": false,
+          "description": "Detail code"
+        },
+        {
+          "name": "uraian_detail",
+          "type": "TEXT",
+          "null": false,
+          "description": "Detailed description"
+        },
+        {
+          "name": "jumlah",
+          "type": "DECIMAL(15,2)",
+          "null": false,
+          "description": "Line item amount"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "default": "CURRENT_TIMESTAMP",
+          "null": false
+        }
+      ],
+      "relationships": [
+        {
+          "type": "N:1",
+          "parent_table": "pengajuan",
+          "parent_column": "id",
+          "foreign_key": "pengajuan_id",
+          "on_delete": "CASCADE"
+        },
+        {
+          "type": "N:1",
+          "parent_table": "kegiatan",
+          "parent_column": "id",
+          "foreign_key": "kegiatan_id"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": ["id"]
+        }
+      ]
+    },
+    {
+      "name": "pengajuan_status_log",
+      "description": "Status change history and audit log",
+      "type": "fact",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "key": "PRIMARY",
+          "auto_increment": true,
+          "null": false
+        },
+        {
+          "name": "pengajuan_id",
+          "type": "INT",
+          "key": "FOREIGN",
+          "references": "pengajuan.id",
+          "null": false,
+          "description": "Proposal being logged"
+        },
+        {
+          "name": "status_lama",
+          "type": "ENUM",
+          "values": [
+            "DRAFT",
+            "TERKIRIM",
+            "TERIMA_BERKAS",
+            "DISPOSISI_KABAG_REN",
+            "DISPOSISI_WAKA",
+            "TERIMA_SIKEU",
+            "DIBAYARKAN",
+            "DITOLAK"
+          ],
+          "null": true,
+          "description": "Previous status"
+        },
+        {
+          "name": "status_baru",
+          "type": "ENUM",
+          "values": [
+            "DRAFT",
+            "TERKIRIM",
+            "TERIMA_BERKAS",
+            "DISPOSISI_KABAG_REN",
+            "DISPOSISI_WAKA",
+            "TERIMA_SIKEU",
+            "DIBAYARKAN",
+            "DITOLAK"
+          ],
+          "null": false,
+          "description": "New status"
+        },
+        {
+          "name": "keterangan",
+          "type": "TEXT",
+          "null": true,
+          "description": "Change reason/notes"
+        },
+        {
+          "name": "user_id",
+          "type": "INT",
+          "key": "FOREIGN",
+          "references": "users.id",
+          "null": false,
+          "description": "User making the change"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "default": "CURRENT_TIMESTAMP",
+          "null": false
+        }
+      ],
+      "relationships": [
+        {
+          "type": "N:1",
+          "parent_table": "pengajuan",
+          "parent_column": "id",
+          "foreign_key": "pengajuan_id",
+          "on_delete": "CASCADE"
+        },
+        {
+          "type": "N:1",
+          "parent_table": "users",
+          "parent_column": "id",
+          "foreign_key": "user_id"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": ["id"]
+        },
+        {
+          "name": "idx_status_log_pengajuan",
+          "columns": ["pengajuan_id"]
+        },
+        {
+          "name": "idx_status_log_created",
+          "columns": ["created_at"]
+        }
+      ]
+    }
+  ],
+  "statistics": {
+    "total_tables": 6,
+    "total_columns": 62,
+    "primary_keys": 6,
+    "foreign_keys": 8,
+    "unique_constraints": 5,
+    "indexes": 11,
+    "views": 2,
+    "relationships": 8
+  },
+  "enums": {
+    "user_role": {
+      "values": ["USER_SATFUNG", "USER_POLSEK", "ADMIN_BAGREN", "ADMIN_SIKEU"],
+      "description": "User roles for role-based access control"
+    },
+    "sumber_dana": {
+      "values": ["RM", "PNBP"],
+      "description": "Funding sources: RM (Regular Budget), PNBP (Non-Tax Revenue)"
+    },
+    "pengajuan_status": {
+      "values": [
+        "DRAFT",
+        "TERKIRIM",
+        "TERIMA_BERKAS",
+        "DISPOSISI_KABAG_REN",
+        "DISPOSISI_WAKA",
+        "TERIMA_SIKEU",
+        "DIBAYARKAN",
+        "DITOLAK"
+      ],
+      "description": "Budget proposal approval workflow states",
+      "workflow": [
+        {
+          "state": "DRAFT",
+          "description": "Initial state, user is editing"
+        },
+        {
+          "state": "TERKIRIM",
+          "description": "Submitted by user"
+        },
+        {
+          "state": "TERIMA_BERKAS",
+          "description": "Documents received by Bagren"
+        },
+        {
+          "state": "DISPOSISI_KABAG_REN",
+          "description": "Assigned to Budget Division Chief"
+        },
+        {
+          "state": "DISPOSISI_WAKA",
+          "description": "Assigned to Deputy Chief for approval"
+        },
+        {
+          "state": "TERIMA_SIKEU",
+          "description": "Approved and received by Finance office"
+        },
+        {
+          "state": "DIBAYARKAN",
+          "description": "Payment/disbursement completed"
+        },
+        {
+          "state": "DITOLAK",
+          "description": "Rejected with reason in status_keterangan"
+        }
+      ]
+    }
+  },
+  "views": [
+    {
+      "name": "v_pengajuan_complete",
+      "description": "Complete view of pengajuan with joined data",
+      "columns": [
+        "id", "nomor_surat", "tanggal_pengajuan", "bulan_pengajuan",
+        "tahun_pengajuan", "sumber_dana", "uraian", "penanggung_jawab",
+        "bendahara_pengeluaran_pembantu", "jumlah_diajukan", "jumlah_pagu",
+        "sisa_pagu", "status", "status_keterangan", "created_at", "updated_at",
+        "nama_user", "user_role", "nama_polsek", "kode_polsek",
+        "nama_kegiatan", "kode_kegiatan"
+      ]
+    },
+    {
+      "name": "v_status_tracking",
+      "description": "Status change tracking with user and timestamp details",
+      "columns": [
+        "pengajuan_id", "nomor_surat", "status_terkini", "tanggal_pengajuan",
+        "status_baru", "keterangan", "tanggal_status", "user_status", "role_user_status"
+      ]
+    }
+  ]
+}
