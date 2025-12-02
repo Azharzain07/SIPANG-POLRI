@@ -42,7 +42,7 @@
 
 ## 📐 ERD & UML
 
-![Uploading ERD Azhar zain.png…]()
+
 
 
 
