@@ -48,7 +48,7 @@ Berikut adalah diagram **Entity-Relationship Diagram (ERD)** dan **Unified Model
 
 ### 1️⃣ Entity-Relationship Diagram (ERD)
 
-![ERD SIPANG POLRI](ERDAJAY.PNG)
+![ERD SIPANG POLRI](ERDAJAY.png)
 
 *Deskripsi:* Menunjukkan relasi antara entitas seperti `User`, `Pengajuan`, `Kegiatan`, `Polsek`, dll., serta atribut dan primary/foreign key-nya.
 
