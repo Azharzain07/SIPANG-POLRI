@@ -42,17 +42,13 @@
 
 ## 📐 ERD & UML
 
-<<<<<<< HEAD
-img/ERDAJAY.png
-
-=======
 Berikut adalah diagram **Entity-Relationship Diagram (ERD)** dan **Unified Modeling Language (UML)** yang digunakan dalam sistem SIPANG POLRI.
 
 ---
 
 ### 1️⃣ Entity-Relationship Diagram (ERD)
 
-![ERD SIPANG POLRI](./images/ERDAJAY.png)
+![ERD SIPANG POLRI](ERDAJAY.PNG)
 
 *Deskripsi:* Menunjukkan relasi antara entitas seperti `User`, `Pengajuan`, `Kegiatan`, `Polsek`, dll., serta atribut dan primary/foreign key-nya.
 
@@ -60,12 +56,11 @@ Berikut adalah diagram **Entity-Relationship Diagram (ERD)** dan **Unified Model
 
 ### 2️⃣ UML Diagram
 
-![UML SIPANG POLRI](./images/UMLAJAY.png)
+![UML SIPANG POLRI](UMLAJAY.png)
 
 *Deskripsi:* Menampilkan struktur kelas, relasi antar kelas, dan fungsi utama sistem. Bisa juga diganti dengan **Use Case Diagram** jika lebih sesuai.
 
 ---
->>>>>>> ad6a3d3a6233e996eca640c5b7a13cc7baa85a23
 
 ## 💻 Teknologi yang Digunakan
 
