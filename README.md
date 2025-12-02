@@ -1,101 +1,147 @@
-# 📑 Dokumentasi Proyek SIPANG POLRI (Sistem Anggaran Polisi RI)
-
-## 💡 Konsep Dari Web Yang Saya Buat
-
-**SIPANG POLRI** adalah Sistem Anggaran Polisi RI yang dirancang untuk mengelola proses pengajuan dan riwayat anggaran di lingkungan Kepolisian Republik Indonesia. Sistem ini bertujuan untuk menyediakan platform yang efisien dan transparan dalam pengajuan, pelacakan, dan pelaporan penggunaan anggaran, memastikan setiap unit dapat mengelola dan memantau ketersediaan dana secara *real-time*.
-
-## 🛠️ Fitur Yang Tersedia
-
-### Halaman Awal & Navigasi
-
-* **Dashboard** (Halaman awal setelah login)
-* **Login**
-* **Pengajuan** (Formulir pengajuan anggaran)
-* **Riwayat** (Melihat riwayat pengajuan dan statusnya)
-* **Logout**
-
-### Autentikasi
-
-* **Login** dengan Username dan Password
-* Penerapan **CAPTCHA** untuk keamanan login
-
-### Multi User
-
-#### Admin (Bidang Perencanaan/Anggaran - Bagren)
-
-* Mengelola seluruh data master (User, Polsek, Kegiatan)
-* Melihat semua pengajuan dari seluruh unit
-* Memproses (Menyetujui/Menolak) pengajuan anggaran
-
-#### User (Unit Polsek)
-
-* Mengakses Halaman Awal/Dashboard setelah Login
-* **Mengisi Formulir Pengajuan** anggaran
-* Melihat **Riwayat Pengajuan** (status, detail) yang diajukan oleh unitnya
-
-## 🔐 Akun Default
-
-| Peran | Username | Password | Keterangan |
-| :--- | :--- | :--- | :--- |
-| **Admin** | `admin.bagren` | `password` | Mengelola data master & pengajuan |
-| **User** | `plsk.grt.kta` | `password` | Membuat dan melihat pengajuan |
-
-## 📐 ERD & UML
-
-Berikut adalah diagram **Entity-Relationship Diagram (ERD)** dan **Unified Modeling Language (UML)** yang digunakan dalam sistem SIPANG POLRI.
+# 📑 Dokumentasi Proyek SIPANG POLRI  
+_Sistem Anggaran Polisi Republik Indonesia_
 
 ---
 
-### 1️⃣ Entity-Relationship Diagram (ERD)
+## 💡 Konsep Sistem
 
+**SIPANG POLRI** adalah sistem berbasis web untuk mengelola proses **pengajuan anggaran** dan **riwayat anggaran** pada lingkungan Kepolisian Republik Indonesia.  
+Sistem ini dibuat menggunakan **Vanilla PHP** mulai dari nol, dengan tujuan:
+
+- Mempermudah proses pengajuan anggaran oleh unit Polsek  
+- Mempercepat proses verifikasi dan persetujuan anggaran oleh Admin Bagren  
+- Menyediakan pelacakan status pengajuan secara real-time  
+- Mengurangi proses manual dan meningkatkan efisiensi  
+
+---
+
+## 🚀 Fitur Utama
+
+### 🏠 Halaman Awal
+- Dashboard  
+- Login  
+- Pengajuan Anggaran  
+- Riwayat Pengajuan  
+- Logout  
+
+---
+
+## 🔐 Autentikasi
+- Login menggunakan Username & Password  
+- Dilengkapi **CAPTCHA** untuk keamanan login  
+
+---
+
+## 👥 Multi User
+
+### 👮‍♂️ Admin (Bagian Perencanaan / Bagren)
+- Mengelola Data Master  
+- Melihat semua pengajuan dari seluruh unit  
+- Menyetujui pengajuan  
+- Menolak pengajuan  
+- Menghapus pengajuan  
+
+### 👤 User (Polsek)
+- Login  
+- Mengisi Formulir Pengajuan Anggaran  
+- Melihat Riwayat Pengajuan  
+- Menghapus Riwayat (opsional)  
+
+---
+
+## 🔑 Akun Default
+
+| Role | Username | Password | Keterangan |
+|------|-----------|-----------|-------------|
+| **Admin** | `ADMIN.BAGREN` | `password` | Mengelola data & pengajuan |
+| **User** | `plsk.grt.kta` | `password` | Membuat & melihat pengajuan |
+
+---
+
+## 🗂️ ERD  
 ![ERD SIPANG POLRI](ERDAJAY.png)
 
-*Deskripsi:* Menunjukkan relasi antara entitas seperti `User`, `Pengajuan`, `Kegiatan`, `Polsek`, dll., serta atribut dan primary/foreign key-nya.
-
 ---
 
-### 2️⃣ UML Diagram
-
+## 🔷 UML Diagram  
 ![UML SIPANG POLRI](UMLAJAY.png)
 
-*Deskripsi:* Menampilkan struktur kelas, relasi antar kelas, dan fungsi utama sistem. Bisa juga diganti dengan **Use Case Diagram** jika lebih sesuai.
+---
+
+## 🖥️ Teknologi yang Digunakan
+
+| Kategori | Teknologi |
+|---------|-----------|
+| Backend | **Vanilla PHP** |
+| Frontend | HTML, CSS, JavaScript |
+| Database | MySQL |
+| Web Server | Apache (XAMPP) |
+| Editor | VSCode |
+| Browser | Chrome |
 
 ---
 
-## 💻 Teknologi yang Digunakan
+## 🛠️ Tools Pendukung
+- XAMPP  
+- VSCode  
+- Chrome  
+- phpMyAdmin  
 
-| Kategori | Teknologi |
-| :--- | :--- |
-| **Backend** | **Vanilla PHP** (Native PHP) |
-| **Frontend** | HTML, CSS, JavaScript (Vanilla/Native) |
-| **Database** | MySQL |
+---
 
-## 🛠️ Tools yang Digunakan
+# ⚙️ Persyaratan Instalasi
 
-* **Web Server**: XAMPP (Apache, MySQL)
-* **Web Browser**: Chrome, Firefox, Edge, dll.
-* **Text Editor**: VSCode (Visual Studio Code)
+Pastikan perangkat Anda memiliki:
 
-## ⚠️ Persyaratan untuk Instalasi
+- PHP 7.x / 8.x  
+- XAMPP (Apache & MySQL)  
+- Web Browser  
+- MySQL  
 
-Pastikan Anda telah menginstal dan mengkonfigurasi perangkat lunak berikut:
+---
 
-* PHP (Versi apa pun yang kompatibel dengan Vanilla PHP)
-* Web Server (Apache melalui XAMPP)
-* Database (MySQL melalui XAMPP)
-* Web Browser
+# 📥 Cara Instalasi SIPANG POLRI
 
-## 🚀 Cara Instalasi SIPANG POLRI
-
-**1. Persiapan Server Lokal (XAMPP)**
-
-1. Pastikan Anda telah menginstal **XAMPP**.
-2. Jalankan modul **Apache** dan **MySQL** dari XAMPP Control Panel.
-3. Akses `http://localhost/phpmyadmin` di browser Anda dan **buat database baru** (misalnya: `db_sipangpolri`).
-
-**2. Clone Repository**
-
-Clone repository proyek dari GitHub:
+### **1. Clone Repository**
 
 ```bash
-git clone <URL_REPO>
+git clone https://github.com/Azharzain07/SIPANG-POLRI.git
+
+2. Masuk ke Direktori
+cd SIPANG-POLRI
+
+3. Pindahkan Folder ke XAMPP
+
+Letakkan project ke folder berikut:
+
+htdocs/SIPANG-POLRI
+
+4. Siapkan Database
+
+Buka phpMyAdmin
+
+Buat database baru:
+
+db_sipangpolri
+
+
+Import file SQL bila disediakan (database.sql).
+
+5. Jalankan Project
+
+Buka browser dan akses:
+
+http://localhost/SIPANG-POLRI/
+
+🎉 Selesai!
+
+Sekarang SIPANG POLRI sudah bisa dijalankan sepenuhnya.
+Jika Anda membutuhkan dokumentasi tambahan seperti:
+
+Flowchart
+
+Sequence Diagram
+
+Activity Diagram
+
+Struktur Folder 
