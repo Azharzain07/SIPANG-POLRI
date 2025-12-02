@@ -42,8 +42,7 @@
 
 ## 📐 ERD & UML
 
-
-
+img/ERDAJAY.png
 
 
 ## 💻 Teknologi yang Digunakan
