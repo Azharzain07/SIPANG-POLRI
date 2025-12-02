@@ -42,7 +42,9 @@
 
 ## 📐 ERD & UML
 
-Dokumen ini mengasumsikan adanya diagram *Entity-Relationship Diagram* (ERD) dan *Unified Modeling Language* (UML) yang relevan dengan sistem manajemen pengajuan (melibatkan entitas seperti `User`, `Pengajuan`, `Kegiatan`, `Polsek`, dll.) untuk referensi teknis.
+
+
+
 
 ## 💻 Teknologi yang Digunakan
 
